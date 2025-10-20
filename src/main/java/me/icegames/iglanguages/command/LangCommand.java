@@ -4,6 +4,7 @@ package me.icegames.iglanguages.command;
 import me.icegames.iglanguages.manager.ActionsManager;
 import me.icegames.iglanguages.manager.LangManager;
 import me.icegames.iglanguages.IGLanguages;
+import me.icegames.iglanguages.util.GetLocale;
 import me.icegames.iglanguages.util.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -108,6 +109,36 @@ public class LangCommand implements CommandExecutor {
         if (args[0].equalsIgnoreCase("list")) {
             List<String> langs = langManager.getAvailableLangs();
             sender.sendMessage(MessageUtil.getMessage(plugin.getMessagesConfig(),"list_languages", "{langs}", String.join(", ", langs)));
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("auto")) {
+            if (args.length == 2) {
+                Player target = Bukkit.getPlayer(args[1]);
+                if (target == null) {
+                    sender.sendMessage(MessageUtil.getMessage(plugin.getMessagesConfig(),"player_not_found"));
+                    return true;
+                }
+                java.util.Optional<String> maybeLocale = GetLocale.resolveLocaleStr(target);
+                if (!maybeLocale.isPresent()) {
+                    sender.sendMessage(MessageUtil.getMessage(plugin.getMessagesConfig(), "internal_error"));
+                    return true;
+                }
+                String lang = maybeLocale.get();
+                List<String> availableLangs = langManager.getAvailableLangs();
+                if (!availableLangs.contains(lang)) {
+                    sender.sendMessage(MessageUtil.getMessage(plugin.getMessagesConfig(), "invalid_lang", "{lang}", lang, "{langs}", String.join(", ", availableLangs)));
+                    return true;
+                }
+                langManager.setPlayerLang(target.getUniqueId(), lang);
+                langManager.savePlayerLang(target.getUniqueId());
+                sender.sendMessage(MessageUtil.getMessage(plugin.getMessagesConfig(), "set_success", "{player}", target.getName(), "{lang}", lang));
+                actionsManager.executeActionsOnSet(target, lang);
+                return true;
+            }
+            else {
+                sender.sendMessage(MessageUtil.getMessage(plugin.getMessagesConfig(),"get_usage"));
+            }
             return true;
         }
 
