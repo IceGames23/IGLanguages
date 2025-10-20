@@ -63,4 +63,4 @@ Automatic migration from YAML to database storage is performed on first use.
 
 ## Credits
 
-- Developed by **IceGames**
+- Developed by **IceGames**, **RainBowCreation**
