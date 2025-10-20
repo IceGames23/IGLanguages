@@ -1,0 +1,38 @@
+# --- ตัวอย่างการตั้งค่า สำหรับเจ้าของเซิฟเวอร์ ---
+# ตัวอย่าง: %lang_holograms_spawn_line1% or %lang_holograms_spawn_line2%
+
+holograms:
+  spawn:
+    line1: "&bยินดีต้อนรับสู่ Spawn!"
+    line2: "&eด้านหน้าคุณคือ Hub หลัก"
+  shop: "&eคลิกขวา เพื่อเปิดเมนูร้านค้า"
+
+quests:
+  start: "&aเริ่มต้นเควส: %quest_name%!"
+  complete: "&6ยินดีด้วย! คุณสำเร็จเควส: %quest_name%."
+  progress: "&eความค่ืบหน้าเควส: %progress%/%total%"
+
+npc_dialogues:
+  blacksmith:
+    greeting: "&7[ช่างตีเหล็ก] &fสวัดดี, นักพจญภัย! ต้องการซ่อมอุปกรณ์มัํย?"
+    repair_offer: "&7[ช่างตีเหล็ก] &eฉันสามารถซ่อมไอเทมคุณได้ ในราคาที่ไม่แพง"
+  wizard:
+    greeting: "&d[พ่อมด] &fเวทมนต์อยู่ในอากาศ, ขึ้นอยู่กับว่าคุณจะคว้ามันได้หรือปล่าว?"
+    quest_offer: "&d[พ่อมด] &eนำ 5 magic crystals มาให้ฉัน เดี๋ยวจะให้ของราวัลตอบแทน"
+
+scoreboard:
+  title: "&6สถิติของคุณ"
+  kills: "&cฆ่า: &f%kills%"
+  deaths: "&cตาย: &f%deaths%"
+  balance: "&aเงินคงเหลือ: &f$%balance%"
+
+gui:
+  shop_title: "&eร้านค้าเซิฟเวอร์"
+  buy_button: "&aซื้อ"
+  sell_button: "&cขาย"
+  close_button: "&7ปิด"
+
+tips:
+  1: "&bทิป: &fใช้ /spawn เพื่อกลับจุด spawn หลัก"
+  2: "&bทิป: &fสำเร็จเควสเพื่อรางวัลมากมาย!ั"
+  3: "&bทิป: &fเข้า Discord เพือติดตามข้อมูลข่าวสาร และกิจกรรม่"
