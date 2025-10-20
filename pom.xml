@@ -71,8 +71,8 @@
       <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
     </repository>
     <repository>
-        <id>jeff-media-rbc</id>
-        <url>https://repo.rainbowcreation.net</url>
+      <id>jeff-media-public</id>
+      <url>https://repo.jeff-media.com/public/</url>
     </repository>
   </repositories>
 
