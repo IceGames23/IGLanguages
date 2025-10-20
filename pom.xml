@@ -6,7 +6,7 @@
 
   <groupId>me.icegames</groupId>
   <artifactId>IGLanguages</artifactId>
-  <version>1.2.0</version>
+  <version>1.2.1</version>
   <packaging>jar</packaging>
 
   <name>IGLanguages</name>
@@ -70,10 +70,10 @@
       <id>placeholderapi</id>
       <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
     </repository>
-    <repository>
-      <id>jeff-media-public</id>
-      <url>https://repo.jeff-media.com/public/</url>
-    </repository>
+      <repository>
+          <id>jeff-media-rbc</id>
+          <url>https://repo.rainbowcreation.net</url>
+      </repository>
   </repositories>
 
   <dependencies>
@@ -81,8 +81,7 @@
       <groupId>org.spigotmc</groupId>
       <artifactId>spigot-api</artifactId>
       <version>1.8.8-R0.1-SNAPSHOT</version>
-      <scope>system</scope>
-      <systemPath>${project.basedir}/dependencies/spigot.jar</systemPath>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.bstats</groupId>
