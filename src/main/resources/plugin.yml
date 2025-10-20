@@ -1,6 +1,6 @@
 name: IGLanguages
 version: '${project.version}'
-authors: ['IceGames', 'RainBowCreation]']
+authors: ['IceGames', 'RainBowCreation']
 main: me.icegames.iglanguages.IGLanguages
 depend: [PlaceholderAPI]
 commands:
