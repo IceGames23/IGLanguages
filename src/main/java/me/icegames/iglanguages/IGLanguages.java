@@ -37,7 +37,7 @@ public class IGLanguages extends JavaPlugin {
     private void startingBanner() {
         System.out.println("\u001B[36m  ___ \u001B[0m\u001B[1;36m____   \u001B[0m");
         System.out.println("\u001B[36m |_ _\u001B[0m\u001B[1;36m/ ___|  \u001B[0m ");
-        System.out.println("\u001B[36m  | \u001B[0m\u001B[1;36m| |  _   \u001B[0m \u001B[36mI\u001B[0m\u001B[1;36mG\u001B[0m\u001B[1;37m" + pluginName + " \u001B[1;36mv" + pluginVersion + "\u001B[0m by \u001B[1;36mIceGames");
+        System.out.println("\u001B[36m  | \u001B[0m\u001B[1;36m| |  _   \u001B[0m \u001B[36mI\u001B[0m\u001B[1;36mG\u001B[0m\u001B[1;37m" + pluginName + " \u001B[1;36mv" + pluginVersion + "\u001B[0m by \u001B[1;36mIceGames" + "\u001B[0m & \u001B[1;36mRainBowCreation");
         System.out.println("\u001B[36m  | \u001B[0m\u001B[1;36m| |_| |  \u001B[0m \u001B[1;30m" + pluginDescription);
         System.out.println("\u001B[36m |___\u001B[0m\u001B[1;36m\\____| \u001B[0m");
         System.out.println("\u001B[36m         \u001B[0m");
@@ -178,6 +178,11 @@ public class IGLanguages extends JavaPlugin {
         if (!exampleFolder2.exists()) {
             exampleFolder2.mkdirs();
             saveResource("langs/en_us/example.yml", false);
+        }
+        File exampleFolder3 = new File(langsFolder, "th_th");
+        if (!exampleFolder3.exists()) {
+            exampleFolder3.mkdirs();
+            saveResource("langs/th_th/example.yml", false);
         }
     }
 
