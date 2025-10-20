@@ -11,8 +11,8 @@ public class GetLocale {
 
     /**
      * Resolve the player's locale.
-     * - First tries Player#getLocale()
-     * - Then falls back to reflection on player.spigot().getLocale()
+     * - First tries player.spigot().getLocale()
+     * - Then falls back to reflection on player.getLocale()
      */
     public static Optional<Locale> resolveLocale(Player player) {
         Optional<String> maybeLocale = resolveLocaleStr(player);
@@ -51,7 +51,7 @@ public class GetLocale {
                 }
             }
         } catch (NoSuchMethodException ignored) {
-            // spigot() or getLocale() doesn't exist on this server
+            // getLocale() doesn't exist on this server
         } catch (Throwable ignored) {
             // Invocation issues — treat as unavailable
         }
