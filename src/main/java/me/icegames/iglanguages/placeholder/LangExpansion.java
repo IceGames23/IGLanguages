@@ -1,6 +1,5 @@
 package me.icegames.iglanguages.placeholder;
 
-import me.clip.placeholderapi.PlaceholderAPI;
 import me.icegames.iglanguages.manager.LangManager;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
