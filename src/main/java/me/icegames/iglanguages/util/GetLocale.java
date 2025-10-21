@@ -23,7 +23,6 @@ public class GetLocale {
         try {
             String code = player.spigot().getLocale(); // e.g. "en_us", "th_th"
             if (code != null && !code.isEmpty()) {
-                System.out.println("Found :" + code);
                 return Optional.of(code);
             }
         } catch (NoSuchMethodError | UnsupportedOperationException ignored) {
@@ -32,7 +31,6 @@ public class GetLocale {
             // Unexpected issue (plugin security manager, etc.) — try reflection fallback.
         }
 
-        System.out.println("Notfound, fallback");
         return getLocaleReflect(player);
     }
 
@@ -49,7 +47,6 @@ public class GetLocale {
             if (result instanceof String){
                 String s = (String) result;
                 if (!s.isEmpty()) {
-                    System.out.println("Found :" + s);
                     return Optional.of(s);
                 }
             }
@@ -58,7 +55,6 @@ public class GetLocale {
         } catch (Throwable ignored) {
             // Invocation issues — treat as unavailable
         }
-        System.out.println("Notfound, empty");
         return Optional.empty();
     }
 
