@@ -16,8 +16,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-
 import java.io.File;
+import java.util.regex.Pattern;
 
 public class IGLanguages extends JavaPlugin {
 
@@ -30,9 +30,9 @@ public class IGLanguages extends JavaPlugin {
 
     private final String pluginName = "Languages";
     private final String pluginCompleteName = "IGLanguages";
-    private final String pluginVersion = getDescription().getVersion();
+    private String pluginVersion;
     private final String pluginDescription = "The Multi-Language Plugin";
-    private final String consolePrefix = "\u001B[1;30m[\u001B[0m\u001B[36mI\u001B[1;36mG\u001B[0m\u001B[1;37m" + pluginName + "\u001B[1;30m]\u001B[0m ";
+    private String consolePrefix;
 
     private void startingBanner() {
         System.out.println("\u001B[36m  ___ \u001B[0m\u001B[1;36m____   \u001B[0m");
@@ -46,6 +46,9 @@ public class IGLanguages extends JavaPlugin {
     @Override
     public void onEnable() {
         plugin = this;
+
+        this.pluginVersion = normalizeVersion(getDescription().getVersion());
+        this.consolePrefix = "\u001B[1;30m[\u001B[0m\u001B[36mI\u001B[1;36mG\u001B[0m\u001B[1;37m" + pluginName + "\u001B[1;30m]\u001B[0m ";
 
         long startTime = System.currentTimeMillis();
 
@@ -86,11 +89,17 @@ public class IGLanguages extends JavaPlugin {
                 .setNotifyByPermissionOnJoin("iglanguages.updatechecker")
                 .setNotifyOpsOnJoin(true)
                 .onSuccess((commandSenders, latestVersion) -> {
+                    String latest = normalizeVersion(latestVersion);
+                    String rawCurrent = getDescription().getVersion();
+                    boolean libIsNewRaw = UpdateChecker.isOtherVersionNewer(latestVersion, rawCurrent);
+                    boolean libIsNewNorm = UpdateChecker.isOtherVersionNewer(latest, pluginVersion);
+                    int cmp = compareSemVer(latest, pluginVersion);
+                    boolean isNew = libIsNewRaw || libIsNewNorm || (cmp > 0);
                     for (CommandSender sender : commandSenders) {
                         sender.sendMessage(consolePrefix + "§fRunning update checker...");
-                        if (UpdateChecker.isOtherVersionNewer(latestVersion, pluginVersion)) {
+                        if (isNew) {
                             sender.sendMessage(consolePrefix + "§c" + pluginCompleteName + " has a new version available.");
-                            sender.sendMessage(consolePrefix + "§cYour version: §7" + pluginVersion + "§c | Latest version: §a" + latestVersion);
+                            sender.sendMessage(consolePrefix + "§cYour version: §7" + pluginVersion + "§c | Latest version: §a" + latest);
                             sender.sendMessage(consolePrefix + "§cDownload it at: §bhttps://www.spigotmc.org/resources/iglanguages.125318/");
                         } else {
                             sender.sendMessage(consolePrefix + "§a" + pluginCompleteName + " is up to date! §8(§bv" + pluginVersion + "§8)");
@@ -98,6 +107,7 @@ public class IGLanguages extends JavaPlugin {
                     }
                 })
                 .onFail((commandSenders, exception) -> {
+                    getLogger().warning("[IGLanguages] UpdateChecker failed: " + exception.getMessage());
                     for (CommandSender sender : commandSenders) {
                         sender.sendMessage(consolePrefix + "§fRunning update checker...");
                         sender.sendMessage("§c" + pluginCompleteName + " failed to check for updates.");
@@ -109,6 +119,18 @@ public class IGLanguages extends JavaPlugin {
         long endTime = System.currentTimeMillis();
         System.out.println(consolePrefix + "\u001B[1;32mPlugin loaded successfully in " + (endTime - startTime) + "ms\u001B[0m");
     }
+
+    public LangManager getLangManager() {
+        return langManager;
+    }
+
+    public void LogDebug(String message) {
+        if (getConfig().getBoolean("debug", false)) {
+            getLogger().info("§e[DEBUG] §r" + message);
+        }
+    }
+
+    // Private methods
 
     private void initDatabase() {
         String storageType = getConfig().getString("storage.type", "yaml").toLowerCase();
@@ -168,27 +190,62 @@ public class IGLanguages extends JavaPlugin {
 
     private void saveDefaultExamples() {
         File langsFolder = new File(getDataFolder(), "langs");
-        if (!langsFolder.exists()) langsFolder.mkdirs();
+        if (!langsFolder.exists()) {
+            if (!langsFolder.mkdirs()) {
+                getLogger().warning("Could not create langs folder: " + langsFolder.getAbsolutePath());
+            }
+        }
         File exampleFolder = new File(langsFolder, "pt_br");
         if (!exampleFolder.exists()) {
-            exampleFolder.mkdirs();
-            saveResource("langs/pt_br/example.yml", false);
+            if (!exampleFolder.mkdirs()) {
+                getLogger().warning("Could not create example folder: " + exampleFolder.getAbsolutePath());
+            } else {
+                saveResource("langs/pt_br/example.yml", false);
+            }
         }
         File exampleFolder2 = new File(langsFolder, "en_us");
         if (!exampleFolder2.exists()) {
-            exampleFolder2.mkdirs();
-            saveResource("langs/en_us/example.yml", false);
+            if (!exampleFolder2.mkdirs()) {
+                getLogger().warning("Could not create example folder: " + exampleFolder2.getAbsolutePath());
+            } else {
+                saveResource("langs/en_us/example.yml", false);
+            }
         }
     }
 
-    public LangManager getLangManager() {
-        return langManager;
+    private String normalizeVersion(String v) {
+        if (v == null) return "";
+        return v.trim().replaceFirst("(?i)^v", "");
     }
 
-    public void LogDebug(String message) {
-        if (getConfig().getBoolean("debug", false)) {
-            getLogger().info("§e[DEBUG] §r" + message);
+    private int compareSemVer(String a, String b) {
+        if (a == null) a = "";
+        if (b == null) b = "";
+        String[] pa = a.split("\\.");
+        String[] pb = b.split("\\.");
+        int len = Math.max(pa.length, pb.length);
+        Pattern digits = Pattern.compile("(\\d+)");
+        for (int i = 0; i < len; i++) {
+            int na = 0;
+            int nb = 0;
+            if (i < pa.length) {
+                String seg = pa[i];
+                java.util.regex.Matcher ma = digits.matcher(seg);
+                if (ma.find()) {
+                    try { na = Integer.parseInt(ma.group(1)); } catch (NumberFormatException ignored) {}
+                }
+            }
+            if (i < pb.length) {
+                String seg = pb[i];
+                java.util.regex.Matcher mb = digits.matcher(seg);
+                if (mb.find()) {
+                    try { nb = Integer.parseInt(mb.group(1)); } catch (NumberFormatException ignored) {}
+                }
+            }
+            if (na < nb) return -1;
+            if (na > nb) return 1;
         }
+        return 0;
     }
 
 }
