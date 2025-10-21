@@ -110,4 +110,13 @@ public class IGLanguagesAPI {
         langManager.setPlayerLang(player.getUniqueId(), langManager.getDefaultLang());
         langManager.savePlayerLang(player.getUniqueId());
     }
+
+    /**
+     * Detect player client language, for get current player language use getPlayerLang() instead.
+     * @param player the target player
+     * @return The language code (e.g., "en_us").
+     */
+    public String detectPlayerLang(Player player) {
+        return langManager.detectClientLanguage(player);
+    }
 }
