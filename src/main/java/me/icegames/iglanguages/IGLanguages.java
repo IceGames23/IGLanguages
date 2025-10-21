@@ -81,6 +81,7 @@ public class IGLanguages extends JavaPlugin {
         this.actionsManager = new ActionsManager(this);
         getCommand("lang").setExecutor(new LangCommand(langManager, actionsManager, this));
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(langManager, actionsManager, this), this);
+        //getServer().getPluginManager().registerEvent(new PackageListener(this), this);
 
         new UpdateChecker(this, UpdateCheckSource.SPIGOT, SPIGOT_RESOURCE_ID)
                 .checkEveryXHours(24)
