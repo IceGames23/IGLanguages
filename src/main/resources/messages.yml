@@ -6,6 +6,7 @@ help:
   - "  &b/languages help &7- &fShows this message."
   - "  &b/languages set &3<player> <lang> &7- &fSet a player's language."
   - "  &b/languages get &3<player> &7- &fShow a player's language."
+  - "  &b/languages auto &3<player> &7- &fauto detect player's language."
   - "  &b/languages list &7- &fList available languages."
   - "  &b/languages reload &7- &fReload configuration and translations."
   - ""
@@ -20,3 +21,5 @@ invalid_lang: "&cThe language '{lang}' does not exist. Available languages: {lan
 unknown_subcommand: "&cUnknown subcommand."
 only_players: "&cOnly players can execute this command."
 translation_not_found: "&cTranslation '{key}' not found."
+auto_usage: "&cCorrect usage: /languages auto {player}"
+internal_error: "&cInternal error, please contact admin, developer."

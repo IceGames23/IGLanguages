@@ -3,7 +3,6 @@ package me.icegames.iglanguages.manager;
 import me.icegames.iglanguages.IGLanguages;
 import me.icegames.iglanguages.util.StringUtil;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.command.ConsoleCommandSender;
@@ -109,13 +108,9 @@ public class ActionsManager {
         for(char c : message.toCharArray()){
             if(c == '§'){
                 previousCode = true;
-                continue;
             }else if(previousCode == true){
                 previousCode = false;
-                if(c == 'l' || c == 'L'){
-                    isBold = true;
-                    continue;
-                }else isBold = false;
+                isBold = c == 'l' || c == 'L';
             }else{
                 StringUtil.DefaultFontInfo dFI = StringUtil.DefaultFontInfo.getDefaultFontInfo(c);
                 messagePxSize += isBold ? dFI.getBoldLength() : dFI.getLength();

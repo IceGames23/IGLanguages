@@ -2,9 +2,8 @@ package me.icegames.iglanguages.manager;
 
 import me.icegames.iglanguages.IGLanguages;
 import me.clip.placeholderapi.PlaceholderAPI;
-import me.icegames.iglanguages.command.LangCommand;
+import me.icegames.iglanguages.util.GetLocale;
 import me.icegames.iglanguages.util.MessageUtil;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -13,7 +12,6 @@ import me.icegames.iglanguages.util.LangEnum;
 
 import java.io.File;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class LangManager {
     private final IGLanguages plugin;
@@ -176,6 +174,19 @@ public class LangManager {
         translationCache.put(cacheKey, translation);
 
         return translation.replace("&", "§");
+    }
+
+    public String detectClientLanguage(Player player) {
+        java.util.Optional<String> maybeLocale = GetLocale.resolveLocaleStr(player);
+        if (!maybeLocale.isPresent()) {
+                return defaultLang;
+            }
+        String lang = maybeLocale.get();
+        List<String> availableLangs = getAvailableLangs();
+        if (availableLangs.contains(lang)) {
+            return lang;
+        }
+        return defaultLang;
     }
 
     public void clearCache() {

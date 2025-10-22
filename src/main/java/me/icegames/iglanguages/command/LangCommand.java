@@ -1,4 +1,3 @@
-// src/main/java/me/icegames/iglanguages/command/LangCommand.java
 package me.icegames.iglanguages.command;
 
 import me.icegames.iglanguages.manager.ActionsManager;
@@ -9,7 +8,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -108,6 +106,26 @@ public class LangCommand implements CommandExecutor {
         if (args[0].equalsIgnoreCase("list")) {
             List<String> langs = langManager.getAvailableLangs();
             sender.sendMessage(MessageUtil.getMessage(plugin.getMessagesConfig(),"list_languages", "{langs}", String.join(", ", langs)));
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("auto")) {
+            if (args.length == 2) {
+                Player target = Bukkit.getPlayer(args[1]);
+                if (target == null) {
+                    sender.sendMessage(MessageUtil.getMessage(plugin.getMessagesConfig(),"player_not_found"));
+                    return true;
+                }
+                String selectedLang = langManager.detectClientLanguage(target);
+                langManager.setPlayerLang(target.getUniqueId(), selectedLang);
+                langManager.savePlayerLang(target.getUniqueId());
+                sender.sendMessage(MessageUtil.getMessage(plugin.getMessagesConfig(), "set_success", "{player}", target.getName(), "{lang}", selectedLang));
+                actionsManager.executeActionsOnSet(target, selectedLang);
+                return true;
+            }
+            else {
+                sender.sendMessage(MessageUtil.getMessage(plugin.getMessagesConfig(),"get_usage"));
+            }
             return true;
         }
 

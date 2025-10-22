@@ -3,13 +3,12 @@ package me.icegames.iglanguages.listener;
 import me.icegames.iglanguages.IGLanguages;
 import me.icegames.iglanguages.manager.ActionsManager;
 import me.icegames.iglanguages.manager.LangManager;
-import me.icegames.iglanguages.util.LangEnum;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 
-import java.io.File;
 import java.util.UUID;
 
 public class PlayerJoinListener implements Listener {
@@ -30,25 +29,20 @@ public class PlayerJoinListener implements Listener {
         UUID uuid = player.getUniqueId();
         if (!langManager.hasPlayerLang(uuid)) {
             plugin.LogDebug("Player " + player.getName() + " has no language set, setting default language.");
-            String playerLocale = player.spigot().getLocale();
-            String selectedLang = plugin.getConfig().getString("defaultLang");
-            plugin.LogDebug("Player locale: " + playerLocale);
-            if (playerLocale == null || playerLocale.isEmpty()) {
-                playerLocale = plugin.getConfig().getString("defaultLang");
-            }
-            if (LangEnum.isValidCode(playerLocale)) {
-                File langsFolder = new File(plugin.getDataFolder(), "langs");
-                File langFolder = new File(langsFolder, playerLocale);
-                if (langFolder.exists()) {
-                    selectedLang = playerLocale;
-                }
-            }
-
-            selectedLang = selectedLang.toLowerCase();
-            plugin.LogDebug("Selected language: " + selectedLang);
-            langManager.setPlayerLang(uuid, selectedLang);
+            plugin.LogDebug("Temporary set language of " + player.getName() + " to default while waiting language detection.");
+            langManager.setPlayerLang(uuid, langManager.getDefaultLang());
             langManager.savePlayerLang(uuid);
-            actionsManager.executeActionsPath(player, "firstJoinActions");
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    String lang = langManager.detectClientLanguage(player);
+                    langManager.setPlayerLang(uuid, lang);
+                    langManager.savePlayerLang(uuid);
+                    plugin.LogDebug("Player locale: " + lang);
+                    actionsManager.executeActionsPath(player, "firstJoinActions");
+                }
+            }.runTaskLater(plugin, plugin.getConfig().getInt("languageDetectionDelay"));
         } else {
             String playerLang = langManager.getPlayerLang(uuid);
             plugin.LogDebug("Player " + player.getName() + " language is: " + playerLang);

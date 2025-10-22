@@ -2,6 +2,7 @@ package me.icegames.iglanguages;
 
 import com.jeff_media.updatechecker.UpdateCheckSource;
 import com.jeff_media.updatechecker.UpdateChecker;
+import me.icegames.iglanguages.api.IGLanguagesAPI;
 import me.icegames.iglanguages.command.LangCommand;
 import me.icegames.iglanguages.listener.PlayerJoinListener;
 import me.icegames.iglanguages.manager.ActionsManager;
@@ -16,12 +17,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import javax.swing.*;
 import java.io.File;
 import java.util.regex.Pattern;
 
 public class IGLanguages extends JavaPlugin {
 
     public static IGLanguages plugin;
+    private static IGLanguagesAPI api;
     private LangManager langManager;
     private ActionsManager actionsManager;
     private FileConfiguration messagesConfig;
@@ -37,7 +41,7 @@ public class IGLanguages extends JavaPlugin {
     private void startingBanner() {
         System.out.println("\u001B[36m  ___ \u001B[0m\u001B[1;36m____   \u001B[0m");
         System.out.println("\u001B[36m |_ _\u001B[0m\u001B[1;36m/ ___|  \u001B[0m ");
-        System.out.println("\u001B[36m  | \u001B[0m\u001B[1;36m| |  _   \u001B[0m \u001B[36mI\u001B[0m\u001B[1;36mG\u001B[0m\u001B[1;37m" + pluginName + " \u001B[1;36mv" + pluginVersion + "\u001B[0m by \u001B[1;36mIceGames");
+        System.out.println("\u001B[36m  | \u001B[0m\u001B[1;36m| |  _   \u001B[0m \u001B[36mI\u001B[0m\u001B[1;36mG\u001B[0m\u001B[1;37m" + pluginName + " \u001B[1;36mv" + pluginVersion + "\u001B[0m by \u001B[1;36mIceGames" + "\u001B[0m & \u001B[1;36mRainBowCreation");
         System.out.println("\u001B[36m  | \u001B[0m\u001B[1;36m| |_| |  \u001B[0m \u001B[1;30m" + pluginDescription);
         System.out.println("\u001B[36m |___\u001B[0m\u001B[1;36m\\____| \u001B[0m");
         System.out.println("\u001B[36m         \u001B[0m");
@@ -73,14 +77,17 @@ public class IGLanguages extends JavaPlugin {
             new LangExpansion(langManager).register();
             System.out.println(consolePrefix + "Registered PlaceholderAPI expansion.");
         } else {
-            getLogger().warning("Could not find PlaceholderAPI! This plugin is required.");
-            getLogger().warning("Disabling IGLanguages...");
-            Bukkit.getPluginManager().disablePlugin(this);
+            getLogger().warning("Could not find PlaceholderAPI! Plugin will only work as API provider.");
+            getLogger().warning("If you want to use auto-translate placeholder please install PlaceholderAPI to your plugins/ folder");
         }
+
+        getLogger().info("Registering IGLanguageAPI");
+        api = new IGLanguagesAPI(langManager);
 
         this.actionsManager = new ActionsManager(this);
         getCommand("lang").setExecutor(new LangCommand(langManager, actionsManager, this));
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(langManager, actionsManager, this), this);
+        //getServer().getPluginManager().registerEvent(new PackageListener(this), this);
 
         new UpdateChecker(this, UpdateCheckSource.SPIGOT, SPIGOT_RESOURCE_ID)
                 .checkEveryXHours(24)
@@ -211,6 +218,11 @@ public class IGLanguages extends JavaPlugin {
                 saveResource("langs/en_us/example.yml", false);
             }
         }
+        File exampleFolder3 = new File(langsFolder, "th_th");
+        if (!exampleFolder3.exists()) {
+            exampleFolder3.mkdirs();
+            saveResource("langs/th_th/example.yml", false);
+        }
     }
 
     private String normalizeVersion(String v) {
@@ -248,4 +260,11 @@ public class IGLanguages extends JavaPlugin {
         return 0;
     }
 
+    public static IGLanguages getInstance() {
+        return plugin;
+    }
+
+    public static IGLanguagesAPI getAPI() {
+        return api;
+    }
 }

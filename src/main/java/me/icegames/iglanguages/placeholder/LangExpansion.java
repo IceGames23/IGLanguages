@@ -1,6 +1,5 @@
 package me.icegames.iglanguages.placeholder;
 
-import me.clip.placeholderapi.PlaceholderAPI;
 import me.icegames.iglanguages.manager.LangManager;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
@@ -14,12 +13,13 @@ public class LangExpansion extends PlaceholderExpansion {
 
     @Override public String getIdentifier() { return "lang"; }
     @Override public String getAuthor()     { return "IceGames"; }
-    @Override public String getVersion()    { return "1.0.0"; }
+    @Override public String getVersion()    { return "1.0.1"; }
     @Override public boolean persist() { return true; }
 
     @Override
     public String onPlaceholderRequest(Player p, String params) {
         if (params.equalsIgnoreCase("player")) {
+            if (p == null) { return "§cUnknown player!"; }
             return langManager.getPlayerLang(p.getUniqueId());
         }
         if (params.toLowerCase().startsWith("player_")) {
@@ -42,6 +42,10 @@ public class LangExpansion extends PlaceholderExpansion {
                     return "§cUnknown player!";
                 }
             }
+        }
+        if (p == null) {
+            // return default translate if player == null
+            return langManager.getLangTranslation(langManager.getDefaultLang(), params);
         }
         return langManager.getTranslation(p, params);
     }
