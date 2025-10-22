@@ -19,6 +19,7 @@ public class LangExpansion extends PlaceholderExpansion {
     @Override
     public String onPlaceholderRequest(Player p, String params) {
         if (params.equalsIgnoreCase("player")) {
+            if (p == null) { return "§cUnknown player!"; }
             return langManager.getPlayerLang(p.getUniqueId());
         }
         if (params.toLowerCase().startsWith("player_")) {
@@ -41,6 +42,10 @@ public class LangExpansion extends PlaceholderExpansion {
                     return "§cUnknown player!";
                 }
             }
+        }
+        if (p == null) {
+            // return default translate if player == null
+            return langManager.getLangTranslation(langManager.getDefaultLang(), params);
         }
         return langManager.getTranslation(p, params);
     }
