@@ -13,7 +13,7 @@ public class LangExpansion extends PlaceholderExpansion {
 
     @Override public String getIdentifier() { return "lang"; }
     @Override public String getAuthor()     { return "IceGames"; }
-    @Override public String getVersion()    { return "1.0.0"; }
+    @Override public String getVersion()    { return "1.0.1"; }
     @Override public boolean persist() { return true; }
 
     @Override
