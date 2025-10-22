@@ -2,8 +2,7 @@ name: IGLanguages
 version: '${project.version}'
 authors: ['IceGames', 'RainBowCreation']
 main: me.icegames.iglanguages.IGLanguages
-depend: [PlaceholderAPI]
-softdepend: [ ProtocolLib ]
+softdepend: [ PlaceholderAPI, ProtocolLib ]
 commands:
   languages:
     description: Main command of IGLanguages

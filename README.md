@@ -20,7 +20,7 @@ A powerful and flexible language management plugin for Minecraft servers, suppor
 
 ### `messageConfig.yml` Overview
 
-- **defaultLang**: Default language (e.g., `pt_br`). Used as fallback.
+- **defaultLang**: Default language (e.g., `en_us`). Used as fallback.
 - **translationCacheSize**: Max entries in the LRU cache (default: 500).
 - **storage**: Choose between `yaml`, `sqlite`, or `mysql`.
 - **firstJoinActions**: List of actions for players joining for the first time.
@@ -30,6 +30,7 @@ A powerful and flexible language management plugin for Minecraft servers, suppor
 
 ## Placeholders
 
+This required ``PlaceholderAPI`` to be installed in plugins/ folder
 - `%lang_(path)%`: Gets a translation for the player.
 - `%lang_player%`: Gets the player's current language.
 - `%lang_player_(nick)%`: Gets another player's language.
