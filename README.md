@@ -61,6 +61,70 @@ Automatic migration from YAML to database storage is performed on first use.
 
 ---
 
+## Api Usage
+
+replace ``$VERSION`` with current API version.
+
+### Gradle
+```
+repositories {
+    maven { 
+        url = 'https://repo.rainbowcretion.net' 
+    }
+}
+
+dependencies {
+    compile 'me.icegames:iglanguages:$VERSION$'
+}
+```
+### Maven
+```
+<repositories>
+    <repository>
+        <id>rainbowcreation</id>
+        <url>https://repo.rainbowcreation.net</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>me.icegames</groupId>
+        <artifactId>iglanguages</artifactId>
+        <version>$VERSION$</version>
+    <scope>provided</scope>
+    </dependency>
+</dependencies>
+```
+
+### Getting an API instance
+In order to use the API, you must first acquire an API instance. An example plugin class that does this can be found below.
+
+import me.icegames.iglanguages.IGLanguages;
+import me.icegames.iglanguages.api.IGLanguagesAPI;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
+
+public class Example extends JavaPlugin {
+private IGLanguageAPI langAPI;
+
+    @Override
+    public void onEnable() {
+        if (Bukkit.getPluginManager().isPluginEnabled("IGLanguages")) {
+            this.langAPI = IGLanguages.getInstance().getAPI();
+        }
+
+        // When you want to access the API, check if the instance is null
+        if (this.langAPI != null) {
+            // Do stuff with the API here
+        }
+    }
+}
+
+### Depend/Softdepend
+You will need to add ``softdepend: [IGLanguages]``or ``depend: [IGLanguages]`` to your plugin.yml depending on if your plugin requires IGLanguages to be installed or not.
+
+---
+
 ## Credits
 
 - Developed by **IceGames**, **RainBowCreation**

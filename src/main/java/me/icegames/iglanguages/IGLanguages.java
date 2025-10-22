@@ -2,6 +2,7 @@ package me.icegames.iglanguages;
 
 import com.jeff_media.updatechecker.UpdateCheckSource;
 import com.jeff_media.updatechecker.UpdateChecker;
+import me.icegames.iglanguages.api.IGLanguagesAPI;
 import me.icegames.iglanguages.command.LangCommand;
 import me.icegames.iglanguages.listener.PlayerJoinListener;
 import me.icegames.iglanguages.manager.ActionsManager;
@@ -16,12 +17,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import javax.swing.*;
 import java.io.File;
 import java.util.regex.Pattern;
 
 public class IGLanguages extends JavaPlugin {
 
     public static IGLanguages plugin;
+    private static IGLanguagesAPI api;
     private LangManager langManager;
     private ActionsManager actionsManager;
     private FileConfiguration messagesConfig;
@@ -77,6 +81,9 @@ public class IGLanguages extends JavaPlugin {
             getLogger().warning("Disabling IGLanguages...");
             Bukkit.getPluginManager().disablePlugin(this);
         }
+
+        getLogger().info("Registering IGLanguageAPI");
+        this.api = new IGLanguagesAPI(langManager);
 
         this.actionsManager = new ActionsManager(this);
         getCommand("lang").setExecutor(new LangCommand(langManager, actionsManager, this));
@@ -254,4 +261,11 @@ public class IGLanguages extends JavaPlugin {
         return 0;
     }
 
+    public static IGLanguages getInstance() {
+        return plugin;
+    }
+
+    public static IGLanguagesAPI getAPI() {
+        return api;
+    }
 }

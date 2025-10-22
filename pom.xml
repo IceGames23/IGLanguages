@@ -6,7 +6,7 @@
 
   <groupId>me.icegames</groupId>
   <artifactId>IGLanguages</artifactId>
-  <version>1.3.0</version>
+  <version>1.3.1</version>
   <packaging>jar</packaging>
 
   <name>IGLanguages</name>
@@ -102,4 +102,12 @@
       <scope>compile</scope>
     </dependency>
   </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>local-repo</id>
+            <name>Local File System Repository</name>
+            <url>file://.repo</url>
+        </repository>
+    </distributionManagement>
 </project>
