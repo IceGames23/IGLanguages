@@ -74,7 +74,7 @@ repositories {
 }
 
 dependencies {
-    compile 'me.icegames:iglanguages:$VERSION$'
+    compile 'me.icegames:IGLanguages:$VERSION$'
 }
 ```
 ### Maven
@@ -89,7 +89,7 @@ dependencies {
 <dependencies>
     <dependency>
         <groupId>me.icegames</groupId>
-        <artifactId>iglanguages</artifactId>
+        <artifactId>IGLanguages</artifactId>
         <version>$VERSION$</version>
     <scope>provided</scope>
     </dependency>
