@@ -2,6 +2,7 @@ package me.icegames.iglanguages.storage;
 
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class SQLitePlayerLangStorage implements PlayerLangStorage {
     private final Connection connection;
@@ -15,54 +16,70 @@ public class SQLitePlayerLangStorage implements PlayerLangStorage {
 
     @Override
     public void savePlayerLang(UUID uuid, String lang) {
-        try (PreparedStatement ps = connection.prepareStatement(
-                "REPLACE INTO player_langs (uuid, lang) VALUES (?, ?)")) {
-            ps.setString(1, uuid.toString());
-            ps.setString(2, lang);
-            ps.executeUpdate();
-        } catch (SQLException ignored) {}
-    }
-
-    @Override
-    public String getPlayerLang(UUID uuid) {
-        try (PreparedStatement ps = connection.prepareStatement(
-                "SELECT lang FROM player_langs WHERE uuid = ?")) {
-            ps.setString(1, uuid.toString());
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getString("lang");
-        } catch (SQLException ignored) {}
-        return null;
-    }
-
-    @Override
-    public boolean hasPlayerLang(UUID uuid) {
-        try (PreparedStatement ps = connection.prepareStatement(
-                "SELECT 1 FROM player_langs WHERE uuid = ?")) {
-            ps.setString(1, uuid.toString());
-            ResultSet rs = ps.executeQuery();
-            return rs.next();
-        } catch (SQLException ignored) {}
-        return false;
-    }
-
-    @Override
-    public Map<UUID, String> loadAll() {
-        Map<UUID, String> map = new HashMap<>();
-        try (Statement st = connection.createStatement();
-             ResultSet rs = st.executeQuery("SELECT uuid, lang FROM player_langs")) {
-            while (rs.next()) {
-                map.put(UUID.fromString(rs.getString("uuid")), rs.getString("lang"));
+        CompletableFuture.runAsync(() -> {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "REPLACE INTO player_langs (uuid, lang) VALUES (?, ?)")) {
+                ps.setString(1, uuid.toString());
+                ps.setString(2, lang);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-        } catch (SQLException ignored) {}
-        return map;
+        });
+    }
+
+    @Override
+    public CompletableFuture<String> getPlayerLang(UUID uuid) {
+        return CompletableFuture.supplyAsync(() -> {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "SELECT lang FROM player_langs WHERE uuid = ?")) {
+                ps.setString(1, uuid.toString());
+                ResultSet rs = ps.executeQuery();
+                if (rs.next())
+                    return rs.getString("lang");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return null;
+        });
+    }
+
+    @Override
+    public CompletableFuture<Boolean> hasPlayerLang(UUID uuid) {
+        return CompletableFuture.supplyAsync(() -> {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "SELECT 1 FROM player_langs WHERE uuid = ?")) {
+                ps.setString(1, uuid.toString());
+                ResultSet rs = ps.executeQuery();
+                return rs.next();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return false;
+        });
     }
 
     @Override
     public void removePlayerLang(UUID uuid) {
-        try (PreparedStatement ps = connection.prepareStatement(
-                "DELETE FROM player_langs WHERE uuid = ?")) {
-            ps.setString(1, uuid.toString());
-            ps.executeUpdate();
-        } catch (SQLException ignored) {}
+        CompletableFuture.runAsync(() -> {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "DELETE FROM player_langs WHERE uuid = ?")) {
+                ps.setString(1, uuid.toString());
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Override
+    public void close() {
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

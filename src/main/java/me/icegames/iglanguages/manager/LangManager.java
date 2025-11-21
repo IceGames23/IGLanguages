@@ -25,7 +25,7 @@ public class LangManager {
         this.plugin = plugin;
         this.playerLangStorage = storage;
         this.defaultLang = plugin.getConfig().getString("defaultLang");
-        loadPlayerLanguages();
+        // loadPlayerLanguages(); // Removed
         int cacheSize = plugin.getConfig().getInt("translationCacheSize", 500);
         this.translationCache = new LinkedHashMap<String, String>(cacheSize, 0.75f, true) {
             @Override
@@ -38,7 +38,8 @@ public class LangManager {
     public void loadAll() {
         translations.clear();
         File langsFolder = new File(plugin.getDataFolder(), "langs");
-        if (!langsFolder.exists()) langsFolder.mkdirs();
+        if (!langsFolder.exists())
+            langsFolder.mkdirs();
 
         File[] langDirs = langsFolder.listFiles(File::isDirectory);
         if (langDirs != null) {
@@ -46,32 +47,56 @@ public class LangManager {
                 String lang = langDir.getName().toLowerCase();
                 if (!LangEnum.isValidCode(lang)) {
                     plugin.getLogger().warning("Invalid language folder: " + langDir.getName());
-                    plugin.getLogger().warning("Please use a valid language code as the folder name. Codes avaliable: " + LangEnum.getAllCodes());
+                    plugin.getLogger().warning("Please use a valid language code as the folder name. Codes avaliable: "
+                            + LangEnum.getAllCodes());
                     continue;
                 }
                 Map<String, String> langMap = new HashMap<>();
-                File[] files = langDir.listFiles((dir, name) -> name.endsWith(".yml"));
-                if (files != null) {
-                    for (File file : files) {
-                        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                        for (String key : config.getKeys(false)) {
-                            Object value = config.get(key);
-                            if (value instanceof ConfigurationSection) {
-                                flattenSectionUnderscore((ConfigurationSection) value, key + "_", langMap);
-                            } else if (value != null) {
-                                langMap.put(key.toLowerCase(), value.toString());
-                            }
-                        }
-                    }
-                }
+                loadLangFilesRecursively(langDir, langDir, langMap);
                 translations.put(lang, langMap);
             }
         }
-        loadPlayerLanguages();
+        // loadPlayerLanguages(); // Removed as we load on demand
+    }
+
+    private void loadLangFilesRecursively(File rootDir, File currentDir, Map<String, String> langMap) {
+        File[] files = currentDir.listFiles();
+        if (files == null)
+            return;
+
+        for (File file : files) {
+            if (file.isDirectory()) {
+                loadLangFilesRecursively(rootDir, file, langMap);
+            } else if (file.getName().endsWith(".yml")) {
+                String prefix = getFilePrefix(rootDir, file);
+                YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+                for (String key : config.getKeys(false)) {
+                    Object value = config.get(key);
+                    String fullPrefix = prefix.isEmpty() ? "" : prefix + "_";
+
+                    if (value instanceof ConfigurationSection) {
+                        flattenSectionUnderscore((ConfigurationSection) value, fullPrefix + key + "_", langMap);
+                    } else if (value != null) {
+                        langMap.put((fullPrefix + key).toLowerCase(), value.toString());
+                    }
+                }
+            }
+        }
+    }
+
+    private String getFilePrefix(File rootDir, File file) {
+        String relativePath = file.getAbsolutePath().substring(rootDir.getAbsolutePath().length() + 1);
+        // Remove extension
+        if (relativePath.endsWith(".yml")) {
+            relativePath = relativePath.substring(0, relativePath.length() - 4);
+        }
+        // Replace separators with dots
+        return relativePath.replace(File.separatorChar, '.');
     }
 
     private void flattenSectionUnderscore(ConfigurationSection section, String prefix, Map<String, String> map) {
-        if (section == null) return;
+        if (section == null)
+            return;
         for (String key : section.getKeys(false)) {
             Object value = section.get(key);
             if (value instanceof ConfigurationSection) {
@@ -82,19 +107,17 @@ public class LangManager {
         }
     }
 
-    public void loadPlayerLanguages() {
-        playerLang.clear();
-        playerLang.putAll(playerLangStorage.loadAll());
-    }
+    // Removed loadPlayerLanguages()
 
     public void savePlayerLanguages() {
-        for (Map.Entry<UUID, String> entry : playerLang.entrySet()) {
-            playerLangStorage.savePlayerLang(entry.getKey(), entry.getValue());
-        }
+        // No longer needed as we save on change, but kept for API compatibility if
+        // needed, or just remove.
+        // For now, we can just iterate if we really wanted to, but we don't need to
+        // save all at once.
     }
 
     public void setPlayerLang(UUID uuid, String lang) {
-        lang.toLowerCase();
+        lang = lang.toLowerCase();
         playerLang.put(uuid, lang);
         playerLangStorage.savePlayerLang(uuid, lang);
     }
@@ -103,13 +126,31 @@ public class LangManager {
         return playerLang.get(uuid);
     }
 
+    public java.util.concurrent.CompletableFuture<String> loadPlayerLang(UUID uuid) {
+        return playerLangStorage.getPlayerLang(uuid).thenApply(lang -> {
+            if (lang != null) {
+                playerLang.put(uuid, lang);
+                plugin.LogDebug("Loaded language " + lang + " for " + uuid);
+            }
+            return lang;
+        });
+    }
+
+    public void unloadPlayerLang(UUID uuid) {
+        playerLang.remove(uuid);
+    }
+
     public boolean hasPlayerLang(UUID uuid) {
-        return playerLangStorage.hasPlayerLang(uuid);
+        // This is now async in storage, but we check memory first
+        return playerLang.containsKey(uuid);
+        // If we needed to check DB, it would be async.
+        // But for synchronous API, we rely on memory.
     }
 
     public void savePlayerLang(UUID uuid) {
         String lang = playerLang.get(uuid);
-        if (lang != null) playerLangStorage.savePlayerLang(uuid, lang);
+        if (lang != null)
+            playerLangStorage.savePlayerLang(uuid, lang);
         plugin.LogDebug("Saved player language " + lang);
     }
 
@@ -147,7 +188,7 @@ public class LangManager {
         String translation = langMap.getOrDefault(key.toLowerCase(), defaultMap.get(key.toLowerCase()));
 
         if (translation == null) {
-            translation = MessageUtil.getMessage(plugin.getMessagesConfig(),"translation_not_found", "{key}", key);
+            translation = MessageUtil.getMessage(plugin.getMessagesConfig(), "translation_not_found", "{key}", key);
         }
 
         translationCache.put(cacheKey, translation);
@@ -168,7 +209,7 @@ public class LangManager {
         String translation = langMap.getOrDefault(key.toLowerCase(), defaultMap.get(key.toLowerCase()));
 
         if (translation == null) {
-            translation = MessageUtil.getMessage(plugin.getMessagesConfig(),"translation_not_found", "{key}", key);
+            translation = MessageUtil.getMessage(plugin.getMessagesConfig(), "translation_not_found", "{key}", key);
         }
 
         translationCache.put(cacheKey, translation);
@@ -179,8 +220,8 @@ public class LangManager {
     public String detectClientLanguage(Player player) {
         java.util.Optional<String> maybeLocale = GetLocale.resolveLocaleStr(player);
         if (!maybeLocale.isPresent()) {
-                return defaultLang;
-            }
+            return defaultLang;
+        }
         String lang = maybeLocale.get();
         List<String> availableLangs = getAvailableLangs();
         if (availableLangs.contains(lang)) {

@@ -2,11 +2,20 @@ package me.icegames.iglanguages.storage;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletableFuture;
 
 public interface PlayerLangStorage {
     void savePlayerLang(UUID uuid, String lang);
-    String getPlayerLang(UUID uuid);
-    boolean hasPlayerLang(UUID uuid);
-    Map<UUID, String> loadAll();
+
+    CompletableFuture<String> getPlayerLang(UUID uuid);
+
+    CompletableFuture<Boolean> hasPlayerLang(UUID uuid);
+
+    // loadAll is removed as we are moving to on-demand loading
+    // Map<UUID, String> loadAll();
+
     void removePlayerLang(UUID uuid);
+
+    void close();
 }

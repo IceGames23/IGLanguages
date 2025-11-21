@@ -27,25 +27,32 @@ public class PlayerJoinListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
-        if (!langManager.hasPlayerLang(uuid)) {
-            plugin.LogDebug("Player " + player.getName() + " has no language set, setting default language.");
-            plugin.LogDebug("Temporary set language of " + player.getName() + " to default while waiting language detection.");
-            langManager.setPlayerLang(uuid, langManager.getDefaultLang());
-            langManager.savePlayerLang(uuid);
 
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    String lang = langManager.detectClientLanguage(player);
-                    langManager.setPlayerLang(uuid, lang);
-                    langManager.savePlayerLang(uuid);
-                    plugin.LogDebug("Player locale: " + lang);
-                    actionsManager.executeActionsPath(player, "firstJoinActions");
-                }
-            }.runTaskLater(plugin, plugin.getConfig().getInt("languageDetectionDelay"));
-        } else {
-            String playerLang = langManager.getPlayerLang(uuid);
-            plugin.LogDebug("Player " + player.getName() + " language is: " + playerLang);
-        }
+        langManager.loadPlayerLang(uuid).thenAccept(loadedLang -> {
+            if (loadedLang == null) {
+                // New player or no language set
+                plugin.LogDebug("Player " + player.getName() + " has no language set, setting default language.");
+
+                // Set default temporarily
+                langManager.setPlayerLang(uuid, langManager.getDefaultLang());
+
+                // We don't save immediately if we are going to detect language,
+                // but the original code did save. Let's follow original logic but async.
+                langManager.savePlayerLang(uuid);
+
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        String lang = langManager.detectClientLanguage(player);
+                        langManager.setPlayerLang(uuid, lang);
+                        langManager.savePlayerLang(uuid);
+                        plugin.LogDebug("Player locale: " + lang);
+                        actionsManager.executeActionsPath(player, "firstJoinActions");
+                    }
+                }.runTaskLater(plugin, plugin.getConfig().getInt("languageDetectionDelay"));
+            } else {
+                plugin.LogDebug("Player " + player.getName() + " language is: " + loadedLang);
+            }
+        });
     }
 }
