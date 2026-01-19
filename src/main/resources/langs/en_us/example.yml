@@ -1,5 +1,6 @@
 # --- Useful examples for server owners ---
-# Use Example: %lang_holograms_spawn_line1% or %lang_holograms_spawn_line2%
+# Files in root folder (no subfolder) have NO prefix, just use the key path:
+# Example: %lang_holograms_spawn_line1% or %lang_quests_start%
 
 holograms:
   spawn:

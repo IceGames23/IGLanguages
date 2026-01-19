@@ -37,8 +37,15 @@ debug: false
 # If a translation is not found in the player's language, this language will be used as fallback.
 defaultLang: en_us
 
-# Translation cache size (improves performance, but uses more memory).
-translationCacheSize: 500
+# Performance optimization settings
+performance:
+  # Cache for fully-parsed messages (with placeholders resolved)
+  # Higher values use more memory but improve performance for repeated translations
+  parsedMessageCacheSize: 1000
+  
+  # Cache for raw translations (before placeholder parsing)
+  # This is the L1 cache for translation lookups
+  translationCacheSize: 500
 
 # Don't change this if you don't know what it is
 languageDetectionDelay: 100
@@ -60,12 +67,20 @@ storage:
       connectTimeout: 5000
       characterEncoding: utf8
 
+# Redis configuration for cross-server synchronization
+redis:
+  enabled: false
+  host: localhost
+  port: 6379
+  password: ""
+  use-ssl: false
+
 # Actions executed the first time a player joins the server.
 firstJoinActions:
-  - "message: &7 "
+  - "message: §7 "
   - "centered_message: &cWelcome to the server!"
   - "centered_message: &cYou can use /languages list to see the available languages."
-  - "message: &7 "
+  - "message: §7 "
   - "playsound: LEVEL_UP;1;0.1"
   - "console_command: say %player% joined the server for the first time"
   - "console_command: A COMMAND TO OPEN THE LANGUAGE MENU SELECTION"
@@ -73,23 +88,23 @@ firstJoinActions:
 # Per-language actions when setting/changing a player's language.
 actionsOnSet:
   pt_br:
-    - "message: &7 "
+    - "message: §7 "
     - "centered_message: &cVocê definiu o idioma para português."
     - "centered_message: &cVocê pode usar /languages list para ver os idiomas disponíveis."
-    - "message: &7 "
+    - "message: §7 "
     - "playsound: LEVEL_UP;1;0.1"
     - "console_command: say %player% definiu o idioma para português"
   en_us:
-    - "message: &7 "
+    - "message: §7 "
     - "centered_message: &cYou set the language to English."
     - "centered_message: &cYou can use /languages list to see the available languages."
-    - "message: &7 "
+    - "message: §7 "
     - "playsound: LEVEL_UP;1;0.1"
     - "console_command: say %player% set the language to English"
   th_th:
-    - "message: &7 "
+    - "message: §7 "
     - "centered_message: &cภาษาของคุณถูกตั้งเป็น ภาษาไทย"
     - "centered_message: &cสามารถใช้ /languages list เพื่อดูภาษาทั้งหมดที่รองรับ"
-    - "message: &7 "
+    - "message: §7 "
     - "playsound: LEVEL_UP;1;0.1"
     - "console_command: say %player% ตั้งค่าภาษาเป็น ภาษาไทย"

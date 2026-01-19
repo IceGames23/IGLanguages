@@ -8,6 +8,8 @@ import me.icegames.iglanguages.listener.PlayerJoinListener;
 import me.icegames.iglanguages.listener.PlayerQuitListener;
 import me.icegames.iglanguages.manager.ActionsManager;
 import me.icegames.iglanguages.manager.LangManager;
+import me.icegames.iglanguages.manager.RedisManager;
+import me.icegames.iglanguages.util.ConfigUpdateHelper;
 import me.icegames.iglanguages.placeholder.LangExpansion;
 import me.icegames.iglanguages.storage.PlayerLangStorage;
 import me.icegames.iglanguages.storage.YamlPlayerLangStorage;
@@ -19,7 +21,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import javax.swing.*;
 import java.io.File;
 import java.util.regex.Pattern;
 
@@ -38,6 +39,8 @@ public class IGLanguages extends JavaPlugin {
     private String pluginVersion;
     private final String pluginDescription = "The Multi-Language Plugin";
     private String consolePrefix;
+
+    private RedisManager redisManager;
 
     private void startingBanner() {
         System.out.println("\u001B[36m  ___ \u001B[0m\u001B[1;36m____   \u001B[0m");
@@ -70,14 +73,20 @@ public class IGLanguages extends JavaPlugin {
         saveDefaultMessagesConfig();
         saveDefaultExamples();
 
+        // Update configs automatically
+        ConfigUpdateHelper.updateConfigs(this, "config.yml", "messages.yml");
+
         initDatabase();
 
+        this.redisManager = new RedisManager(this);
+
         this.langManager = new LangManager(this, storage);
-        System.out.println(consolePrefix + "Configuration successfully loaded.");
-        System.out.println(consolePrefix + "Loaded " + langManager.getAvailableLangs().size() + " languages! "
+        api = new IGLanguagesAPI(langManager);
+        langManager.loadAll();
+        getLogger().info("Configuration successfully loaded.");
+        getLogger().info("Loaded " + langManager.getAvailableLangs().size() + " languages! "
                 + langManager.getAvailableLangs());
-        System.out
-                .println(consolePrefix + "Loaded " + langManager.getTotalTranslationsCount() + " total translations!");
+        getLogger().info("Loaded " + langManager.getTotalTranslationsCount() + " total translations!");
 
         this.actionsManager = new ActionsManager(this);
         getCommand("languages").setExecutor(new LangCommand(langManager, actionsManager, this));
@@ -87,7 +96,7 @@ public class IGLanguages extends JavaPlugin {
 
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new LangExpansion(langManager).register();
-            System.out.println(consolePrefix + "Registered PlaceholderAPI expansion.");
+            getLogger().info("Registered PlaceholderAPI expansion.");
         } else {
             getLogger().warning("Could not find PlaceholderAPI! Plugin will only work as API provider.");
             getLogger().warning(
@@ -122,19 +131,25 @@ public class IGLanguages extends JavaPlugin {
                         }
                     }
                 })
-                .onFail((commandSenders, exception) -> {
-                    getLogger().warning("[IGLanguages] UpdateChecker failed: " + exception.getMessage());
-                    for (CommandSender sender : commandSenders) {
-                        sender.sendMessage(consolePrefix + "§fRunning update checker...");
-                        sender.sendMessage("§c" + pluginCompleteName + " failed to check for updates.");
-                    }
-                })
-                .setNotifyRequesters(false)
                 .checkNow();
 
         long endTime = System.currentTimeMillis();
-        System.out.println(
-                consolePrefix + "\u001B[1;32mPlugin loaded successfully in " + (endTime - startTime) + "ms\u001B[0m");
+        System.out.println(consolePrefix + "Plugin successfully enabled! (" + (endTime - startTime) + "ms)");
+    }
+
+    @Override
+    public void onDisable() {
+        if (storage != null) {
+            storage.close();
+        }
+        if (redisManager != null) {
+            redisManager.close();
+        }
+        System.out.println(consolePrefix + "Plugin disabled.");
+    }
+
+    public RedisManager getRedisManager() {
+        return redisManager;
     }
 
     public LangManager getLangManager() {
@@ -172,18 +187,8 @@ public class IGLanguages extends JavaPlugin {
             storage = new YamlPlayerLangStorage(new File(getDataFolder(), "players.yml"));
         }
 
-        // Migration logic - only if we want to migrate from old YAML to new storage
-        // But since we removed loadAll from interface, we need to handle it carefully.
-        // For now, let's skip auto-migration on every start to avoid performance hit,
-        // or implement a dedicated migration command.
-        // If the user really needs migration, we can add it back properly.
-        // For this task, ensuring async storage works is priority.
-
         System.out.println(consolePrefix + "Database successfully initialized (" + storageType.toUpperCase() + ")");
     }
-
-    // migrateYamlToStorage removed as it relies on loadAll which is heavy.
-    // If migration is needed, it should be a separate task/command.
 
     public FileConfiguration getMessagesConfig() {
         if (messagesConfig == null) {
@@ -202,32 +207,33 @@ public class IGLanguages extends JavaPlugin {
 
     private void saveDefaultExamples() {
         File langsFolder = new File(getDataFolder(), "langs");
-        if (!langsFolder.exists()) {
-            if (!langsFolder.mkdirs()) {
-                getLogger().warning("Could not create langs folder: " + langsFolder.getAbsolutePath());
-            }
+
+        // Only create examples on first start (when langs folder doesn't exist)
+        if (langsFolder.exists()) {
+            return;
         }
-        File exampleFolder = new File(langsFolder, "pt_br");
-        if (!exampleFolder.exists()) {
-            if (!exampleFolder.mkdirs()) {
-                getLogger().warning("Could not create example folder: " + exampleFolder.getAbsolutePath());
-            } else {
-                saveResource("langs/pt_br/example.yml", false);
-            }
+
+        if (!langsFolder.mkdirs()) {
+            getLogger().warning("Could not create langs folder: " + langsFolder.getAbsolutePath());
+            return;
         }
-        File exampleFolder2 = new File(langsFolder, "en_us");
-        if (!exampleFolder2.exists()) {
-            if (!exampleFolder2.mkdirs()) {
-                getLogger().warning("Could not create example folder: " + exampleFolder2.getAbsolutePath());
-            } else {
-                saveResource("langs/en_us/example.yml", false);
-            }
-        }
-        File exampleFolder3 = new File(langsFolder, "th_th");
-        if (!exampleFolder3.exists()) {
-            exampleFolder3.mkdirs();
-            saveResource("langs/th_th/example.yml", false);
-        }
+
+        getLogger().info("First start detected - creating example language files...");
+
+        // Portuguese (pt_br) examples
+        saveResource("langs/pt_br/example.yml", false);
+        saveResource("langs/pt_br/menus/main.yml", false);
+        saveResource("langs/pt_br/messages/system.yml", false);
+
+        // English (en_us) examples
+        saveResource("langs/en_us/example.yml", false);
+        saveResource("langs/en_us/menus/main.yml", false);
+        saveResource("langs/en_us/messages/system.yml", false);
+
+        // Thai (th_th) examples
+        saveResource("langs/th_th/example.yml", false);
+
+        getLogger().info("Example language files created successfully!");
     }
 
     private String normalizeVersion(String v) {

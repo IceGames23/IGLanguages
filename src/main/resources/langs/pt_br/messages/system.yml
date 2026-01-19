@@ -1,0 +1,20 @@
+# --- Traduções de mensagens do sistema ---
+# Exemplo: %lang_messages.system_system_welcome% ou %lang_messages.system_errors_no_permission%
+
+system:
+  prefix: "&8[&bServidor&8]&r "
+  welcome: "&aBem-vindo ao servidor, {player}!"
+  goodbye: "&7{player} saiu do servidor."
+  first_join: "&6Bem-vindo &f{player}&6 ao servidor pela primeira vez!"
+  restart_warning: "&c&lServidor reiniciando em {time}!"
+
+errors:
+  no_permission: "&cVocê não tem permissão para fazer isso!"
+  player_not_found: "&cJogador não encontrado: {player}"
+  invalid_command: "&cComando inválido. Use /ajuda para assistência."
+  cooldown: "&eVocê deve esperar {time} antes de usar isso novamente."
+
+success:
+  teleport: "&aTeletransportando para {location}..."
+  saved: "&aSeus dados foram salvos!"
+  loaded: "&aSeus dados foram carregados!"

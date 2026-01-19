@@ -1,5 +1,6 @@
 # --- Exemplos úteis para donos de servidor ---
-# Exemplo de Uso: %lang_holograms_spawn_line1% ou %lang_holograms_spawn_line2%
+# Arquivos na pasta principal (sem subpasta) NÃO têm prefixo:
+# Exemplo: %lang_holograms_spawn_line1% ou %lang_quests_start%
 
 holograms:
   spawn: 

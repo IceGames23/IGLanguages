@@ -1,6 +1,11 @@
 # User-specific stuff
+!README.md
+!.docs/
 .idea/
-
+.cursor/
+.vscode/
+.claude/
+*.md
 *.iml
 *.ipr
 *.iws
@@ -10,6 +15,9 @@ out/
 
 # Compiled class file
 *.class
+
+crowdin.yml
+.github/
 
 # Log file
 *.log
@@ -79,7 +87,7 @@ ehthumbs_vista.db
 # Dump file
 *.stackdump
 
-# Folder messageConfig file
+# Folder config file
 [Dd]esktop.ini
 
 # Recycle Bin used on file shares
@@ -111,5 +119,3 @@ buildNumber.properties
 
 # Common working directory
 run/
-
-.repo/

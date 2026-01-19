@@ -1,0 +1,35 @@
+# --- Traduções de menus ---
+# Exemplo: %lang_menus.main_main_title% ou %lang_menus.main_shop_title%
+
+main:
+  title: "&9&lMenu Principal"
+  items:
+    play: "&aJogar Agora"
+    settings: "&eConfigurações"
+    shop: "&6Loja"
+    profile: "&bPerfil"
+    close: "&cFechar"
+
+shop:
+  title: "&6&lLoja do Servidor"
+  categories:
+    weapons: "&cArmas"
+    armor: "&9Armaduras"
+    tools: "&aFerramentas"
+    consumables: "&dConsumíveis"
+  buttons:
+    buy: "&a[Comprar]"
+    sell: "&c[Vender]"
+    confirm: "&a&lConfirmar"
+    cancel: "&c&lCancelar"
+  messages:
+    purchased: "&aVocê comprou {item} por R${price}!"
+    sold: "&eVocê vendeu {item} por R${price}!"
+    not_enough_money: "&cVocê não tem dinheiro suficiente!"
+
+profile:
+  title: "&b&lPerfil de {player}"
+  stats:
+    level: "&7Nível: &f{level}"
+    experience: "&7Experiência: &f{exp}/{max_exp}"
+    playtime: "&7Tempo de Jogo: &f{hours}h {minutes}m"

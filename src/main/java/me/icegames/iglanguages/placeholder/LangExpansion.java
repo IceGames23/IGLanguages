@@ -11,15 +11,32 @@ public class LangExpansion extends PlaceholderExpansion {
         this.langManager = langManager;
     }
 
-    @Override public String getIdentifier() { return "lang"; }
-    @Override public String getAuthor()     { return "IceGames"; }
-    @Override public String getVersion()    { return "1.0.1"; }
-    @Override public boolean persist() { return true; }
+    @Override
+    public String getIdentifier() {
+        return "lang";
+    }
+
+    @Override
+    public String getAuthor() {
+        return "IceGames";
+    }
+
+    @Override
+    public String getVersion() {
+        return "1.0.1";
+    }
+
+    @Override
+    public boolean persist() {
+        return true;
+    }
 
     @Override
     public String onPlaceholderRequest(Player p, String params) {
         if (params.equalsIgnoreCase("player")) {
-            if (p == null) { return "§cUnknown player!"; }
+            if (p == null) {
+                return "§cUnknown player!";
+            }
             return langManager.getPlayerLang(p.getUniqueId());
         }
         if (params.toLowerCase().startsWith("player_")) {
@@ -28,14 +45,8 @@ public class LangExpansion extends PlaceholderExpansion {
             if (target != null) {
                 return langManager.getPlayerLang(target.getUniqueId());
             } else {
-                java.util.UUID uuid = null;
-                for (java.util.UUID id : langManager.playerLang.keySet()) {
-                    org.bukkit.OfflinePlayer off = org.bukkit.Bukkit.getOfflinePlayer(id);
-                    if (off.getName() != null && off.getName().equalsIgnoreCase(targetName)) {
-                        uuid = id;
-                        break;
-                    }
-                }
+                // O(1) lookup using reverse map
+                java.util.UUID uuid = langManager.getUUIDByName(targetName);
                 if (uuid != null) {
                     return langManager.getPlayerLang(uuid);
                 } else {

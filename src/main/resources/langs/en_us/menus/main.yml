@@ -1,0 +1,36 @@
+# --- Menu translations (in subfolder) ---
+# Files in subfolders use: %lang_folder.file_key%
+# Example: %lang_menus.main_main_title% or %lang_menus.main_shop_buttons_buy%
+
+main:
+  title: "&9&lMain Menu"
+  items:
+    play: "&aPlay Now"
+    settings: "&eSettings"
+    shop: "&6Shop"
+    profile: "&bProfile"
+    close: "&cClose"
+
+shop:
+  title: "&6&lServer Shop"
+  categories:
+    weapons: "&cWeapons"
+    armor: "&9Armor"
+    tools: "&aTools"
+    consumables: "&dConsumables"
+  buttons:
+    buy: "&a[Buy]"
+    sell: "&c[Sell]"
+    confirm: "&a&lConfirm"
+    cancel: "&c&lCancel"
+  messages:
+    purchased: "&aYou purchased {item} for ${price}!"
+    sold: "&eYou sold {item} for ${price}!"
+    not_enough_money: "&cYou don't have enough money!"
+
+profile:
+  title: "&b&l{player}'s Profile"
+  stats:
+    level: "&7Level: &f{level}"
+    experience: "&7Experience: &f{exp}/{max_exp}"
+    playtime: "&7Playtime: &f{hours}h {minutes}m"

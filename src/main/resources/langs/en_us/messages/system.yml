@@ -1,0 +1,20 @@
+# --- System messages translations ---
+# Example: %lang_messages.system_system_welcome% or %lang_messages.system_errors_no_permission%
+
+system:
+  prefix: "&8[&bServer&8]&r "
+  welcome: "&aWelcome to the server, {player}!"
+  goodbye: "&7{player} has left the server."
+  first_join: "&6Welcome &f{player}&6 to the server for the first time!"
+  restart_warning: "&c&lServer restarting in {time}!"
+
+errors:
+  no_permission: "&cYou don't have permission to do this!"
+  player_not_found: "&cPlayer not found: {player}"
+  invalid_command: "&cInvalid command. Use /help for assistance."
+  cooldown: "&eYou must wait {time} before using this again."
+
+success:
+  teleport: "&aTeleporting to {location}..."
+  saved: "&aYour data has been saved!"
+  loaded: "&aYour data has been loaded!"
