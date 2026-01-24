@@ -1,9 +1,15 @@
 package me.icegames.iglanguages.util;
 
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MessageUtil {
+
+    private static final Pattern HEX_PATTERN = Pattern.compile("&\\{#([A-Fa-f0-9]{6})\\}");
+
     public static String getMessage(FileConfiguration messageConfig, String path, String... placeholders) {
         Object messageObj = messageConfig.get(path);
         String message;
@@ -17,7 +23,7 @@ public class MessageUtil {
             message = String.join("\n", messageList);
         } else {
             message = "&cMessage '" + path + "' not found in messages.yml.";
-            return message;
+            return colorize(message);
         }
 
         for (int i = 0; i < placeholders.length; i += 2) {
@@ -27,6 +33,32 @@ public class MessageUtil {
         }
 
         String finalMessage = prefix + message;
-        return finalMessage.replace("&", "§");
+        return colorize(finalMessage);
+    }
+
+    public static String colorize(String message) {
+        if (message == null || message.isEmpty())
+            return message;
+
+        String miniMessageParsed = MiniMessageWrapper.tryParse(message);
+        if (miniMessageParsed != null) {
+            message = miniMessageParsed;
+        }
+
+        Matcher matcher = HEX_PATTERN.matcher(message);
+        StringBuffer buffer = new StringBuffer();
+
+        while (matcher.find()) {
+            String hexCode = matcher.group(1);
+            StringBuilder replacement = new StringBuilder("§x");
+            for (char c : hexCode.toCharArray()) {
+                replacement.append('§').append(c);
+            }
+            matcher.appendReplacement(buffer, replacement.toString());
+        }
+        matcher.appendTail(buffer);
+        message = buffer.toString();
+
+        return ChatColor.translateAlternateColorCodes('&', message);
     }
 }

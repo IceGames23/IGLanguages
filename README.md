@@ -17,6 +17,7 @@ A powerful and flexible language management plugin for Minecraft servers, suppor
 
 - 🌐 **Multi-language support** with YAML-based language files.
 - ⚡ **High-performance Caffeine cache** for fast translations.
+- 🎨 **MiniMessage Support**: Use modern formatting like gradients and robust hex interactions (requires server support).
 - 💾 **Flexible storage**: YAML, SQLite, or MySQL.
 - 🔗 **PlaceholderAPI integration** for easy use in other plugins.
 - 🛠️ **Customizable join/set actions** per language.
@@ -37,10 +38,17 @@ A powerful and flexible language management plugin for Minecraft servers, suppor
 
 ---
 
+## Formatting
+- **Standard Colors**: `&a`, `&l`, etc.
+- **Hex Colors**: `&{#RRGGBB}` (e.g., `&{#FF0000}Red`).
+- **MiniMessage**: Supported if the server has the libraries (e.g. Paper 1.16+).
+  - Example: `<rainbow>Rainbow Text</rainbow>`, `<gradient:red:blue>Gradient</gradient>`.
+  - [MiniMessage Documentation](https://docs.papermc.io/adventure/minimessage/format)
+
 ## Placeholders
 
 This required ``PlaceholderAPI`` to be installed in plugins/ folder
-- `%lang_(path)%`: Gets a translation for the player.
+- `%lang_(folder).(path)%` or `%lang_(path)%`: Gets a translation for the player.
 - `%lang_player%`: Gets the player's current language.
 - `%lang_player_(nick)%`: Gets another player's language.
 

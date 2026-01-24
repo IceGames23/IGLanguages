@@ -259,7 +259,7 @@ public class LangManager {
         }
 
         // Apply color codes
-        rawTranslation = rawTranslation.replace("&", "§");
+        rawTranslation = MessageUtil.colorize(rawTranslation);
 
         // Fast path: If no placeholders, return immediately
         if (!containsPlaceholders(rawTranslation)) {
@@ -291,7 +291,7 @@ public class LangManager {
 
         String cached = translationCache.getIfPresent(cacheKey);
         if (cached != null) {
-            return cached.replace("&", "§");
+            return MessageUtil.colorize(cached);
         }
 
         Map<String, String> langMap = translations.getOrDefault(lang, Collections.emptyMap());
@@ -304,7 +304,7 @@ public class LangManager {
 
         translationCache.put(cacheKey, translation);
 
-        return translation.replace("&", "§");
+        return MessageUtil.colorize(translation);
     }
 
     public String detectClientLanguage(Player player) {
@@ -366,7 +366,7 @@ public class LangManager {
             String translation = getRawTranslation(getPlayerLang(player.getUniqueId()), key);
             if (translation != null) {
                 // Apply color codes and escape special regex characters
-                translation = translation.replace("&", "§").replace("$", "\\$");
+                translation = MessageUtil.colorize(translation).replace("$", "\\$");
             } else {
                 translation = "Translation not found: " + key;
             }
