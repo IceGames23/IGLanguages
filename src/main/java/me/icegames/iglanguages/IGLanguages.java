@@ -43,15 +43,13 @@ public class IGLanguages extends JavaPlugin {
     private RedisManager redisManager;
 
     private void startingBanner() {
-        System.out.println("\u001B[36m  ___ \u001B[0m\u001B[1;36m____   \u001B[0m");
-        System.out.println("\u001B[36m |_ _\u001B[0m\u001B[1;36m/ ___|  \u001B[0m ");
-        System.out.println(
-                "\u001B[36m  | \u001B[0m\u001B[1;36m| |  _   \u001B[0m \u001B[36mI\u001B[0m\u001B[1;36mG\u001B[0m\u001B[1;37m"
-                        + pluginName + " \u001B[1;36mv" + pluginVersion + "\u001B[0m by \u001B[1;36mIceGames"
-                        + "\u001B[0m & \u001B[1;36mRainBowCreation");
-        System.out.println("\u001B[36m  | \u001B[0m\u001B[1;36m| |_| |  \u001B[0m \u001B[1;30m" + pluginDescription);
-        System.out.println("\u001B[36m |___\u001B[0m\u001B[1;36m\\____| \u001B[0m");
-        System.out.println("\u001B[36m         \u001B[0m");
+        Bukkit.getConsoleSender().sendMessage("§b  ___ §b____   ");
+        Bukkit.getConsoleSender().sendMessage("§b |_ _§b/ ___|  ");
+        Bukkit.getConsoleSender().sendMessage("§b  | §b| |  _   §bI§bG§f" + pluginName + " §b§lv" + pluginVersion
+                + "§r by §b§lIceGames§r & §b§lRainBowCreation");
+        Bukkit.getConsoleSender().sendMessage("§b  | §b| |_| |  §8" + pluginDescription);
+        Bukkit.getConsoleSender().sendMessage("§b |___§b\\____| ");
+        Bukkit.getConsoleSender().sendMessage("         ");
     }
 
     @Override
@@ -59,8 +57,7 @@ public class IGLanguages extends JavaPlugin {
         plugin = this;
 
         this.pluginVersion = normalizeVersion(getDescription().getVersion());
-        this.consolePrefix = "\u001B[1;30m[\u001B[0m\u001B[36mI\u001B[1;36mG\u001B[0m\u001B[1;37m" + pluginName
-                + "\u001B[1;30m]\u001B[0m ";
+        this.consolePrefix = "§8[§bI§bG§f" + pluginName + "§8] §r";
 
         long startTime = System.currentTimeMillis();
 
@@ -69,31 +66,63 @@ public class IGLanguages extends JavaPlugin {
         int pluginId = 25945;
         Metrics metrics = new Metrics(this, pluginId);
 
+        initConfigs();
+        initDatabase();
+        initManagers();
+        initCommands();
+        initListeners();
+        initIntegrations();
+        initUpdateChecker();
+
+        long endTime = System.currentTimeMillis();
+        Bukkit.getConsoleSender()
+                .sendMessage(consolePrefix + "§aPlugin successfully enabled! (" + (endTime - startTime) + "ms)");
+    }
+
+    @Override
+    public void onDisable() {
+        if (storage != null) {
+            storage.close();
+        }
+        if (redisManager != null) {
+            redisManager.close();
+        }
+        Bukkit.getConsoleSender().sendMessage(consolePrefix + "§cPlugin disabled.");
+    }
+
+    private void initConfigs() {
         saveDefaultConfig();
         saveDefaultMessagesConfig();
         saveDefaultExamples();
 
         // Update configs automatically
         ConfigUpdateHelper.updateConfigs(this, "config.yml", "messages.yml");
+    }
 
-        initDatabase();
-
+    private void initManagers() {
         this.redisManager = new RedisManager(this);
-
         this.langManager = new LangManager(this, storage);
         api = new IGLanguagesAPI(langManager);
         langManager.loadAll();
+
         getLogger().info("Configuration successfully loaded.");
-        getLogger().info("Loaded " + langManager.getAvailableLangs().size() + " languages! "
-                + langManager.getAvailableLangs());
+        getLogger().info(
+                "Loaded " + langManager.getAvailableLangs().size() + " languages! " + langManager.getAvailableLangs());
         getLogger().info("Loaded " + langManager.getTotalTranslationsCount() + " total translations!");
 
         this.actionsManager = new ActionsManager(this);
-        getCommand("languages").setExecutor(new LangCommand(langManager, actionsManager, this));
+    }
 
+    private void initCommands() {
+        getCommand("languages").setExecutor(new LangCommand(langManager, actionsManager, this));
+    }
+
+    private void initListeners() {
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(langManager, actionsManager, this), this);
         getServer().getPluginManager().registerEvents(new PlayerQuitListener(langManager), this);
+    }
 
+    private void initIntegrations() {
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new LangExpansion(langManager).register();
             getLogger().info("Registered PlaceholderAPI expansion.");
@@ -102,7 +131,9 @@ public class IGLanguages extends JavaPlugin {
             getLogger().warning(
                     "If you want to use auto-translate placeholder please install PlaceholderAPI to your plugins/ folder");
         }
+    }
 
+    private void initUpdateChecker() {
         new UpdateChecker(this, UpdateCheckSource.SPIGOT, SPIGOT_RESOURCE_ID)
                 .checkEveryXHours(24)
                 .setDownloadLink("https://www.spigotmc.org/resources/iglanguages.125318/")
@@ -132,20 +163,6 @@ public class IGLanguages extends JavaPlugin {
                     }
                 })
                 .checkNow();
-
-        long endTime = System.currentTimeMillis();
-        System.out.println(consolePrefix + "Plugin successfully enabled! (" + (endTime - startTime) + "ms)");
-    }
-
-    @Override
-    public void onDisable() {
-        if (storage != null) {
-            storage.close();
-        }
-        if (redisManager != null) {
-            redisManager.close();
-        }
-        System.out.println(consolePrefix + "Plugin disabled.");
     }
 
     public RedisManager getRedisManager() {
@@ -166,7 +183,7 @@ public class IGLanguages extends JavaPlugin {
 
     private void initDatabase() {
         String storageType = getConfig().getString("storage.type", "yaml").toLowerCase();
-        System.out.println(consolePrefix + "Loading storage...");
+        Bukkit.getConsoleSender().sendMessage(consolePrefix + "§eLoading storage...");
 
         try {
             if (storageType.equals("sqlite")) {
@@ -187,7 +204,8 @@ public class IGLanguages extends JavaPlugin {
             storage = new YamlPlayerLangStorage(new File(getDataFolder(), "players.yml"));
         }
 
-        System.out.println(consolePrefix + "Database successfully initialized (" + storageType.toUpperCase() + ")");
+        Bukkit.getConsoleSender()
+                .sendMessage(consolePrefix + "§aDatabase successfully initialized (" + storageType.toUpperCase() + ")");
     }
 
     public FileConfiguration getMessagesConfig() {

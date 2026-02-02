@@ -39,8 +39,11 @@ public class LangExpansion extends PlaceholderExpansion {
             }
             return langManager.getPlayerLang(p.getUniqueId());
         }
-        if (params.toLowerCase().startsWith("player_")) {
-            String targetName = params.substring("player_".length());
+
+        // Optimization: Use regionMatches to avoid allocating a new string with
+        // toLowerCase()
+        if (params.regionMatches(true, 0, "player_", 0, 7)) {
+            String targetName = params.substring(7);
             Player target = org.bukkit.Bukkit.getPlayerExact(targetName);
             if (target != null) {
                 return langManager.getPlayerLang(target.getUniqueId());

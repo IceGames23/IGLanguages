@@ -26,7 +26,7 @@ public class LangManager {
     public final Map<UUID, String> playerLang = new ConcurrentHashMap<>();
     private final Map<String, UUID> playerNameToUUID = new ConcurrentHashMap<>();
     private final Map<String, Map<String, String>> translations = new HashMap<>();
-    private final Cache<String, String> translationCache;
+    private final Cache<String, CachedTranslation> translationCache;
     private final Cache<String, String> parsedMessageCache;
     private final String defaultLang;
 
@@ -152,6 +152,10 @@ public class LangManager {
 
                     if (value instanceof ConfigurationSection) {
                         flattenSectionUnderscore((ConfigurationSection) value, fullPrefix + key + "_", langMap);
+                    } else if (value instanceof List) {
+                        List<?> list = (List<?>) value;
+                        String joined = String.join("\n", list.stream().map(Object::toString).toArray(String[]::new));
+                        langMap.put((fullPrefix + key).toLowerCase(), joined);
                     } else if (value != null) {
                         langMap.put((fullPrefix + key).toLowerCase(), value.toString());
                     }
@@ -162,23 +166,14 @@ public class LangManager {
 
     private String getFilePrefix(File rootDir, File file) {
         String relativePath = file.getAbsolutePath().substring(rootDir.getAbsolutePath().length() + 1);
-        // Remove extension
         if (relativePath.endsWith(".yml")) {
             relativePath = relativePath.substring(0, relativePath.length() - 4);
         }
 
-        // Check if file is in a subfolder (contains folder separator)
-        // Files directly in root folder get NO prefix (retrocompatibility with v1.x)
-        // Files in subfolders get folder path as prefix with dot separator
         if (!relativePath.contains(File.separator)) {
-            // File is in root folder (e.g., hub.yml in pt_br/)
-            // NO prefix - maintains compatibility with v1.3.0 placeholders like
-            // %lang_tab_hub_layout_8%
             return "";
         }
 
-        // File is in subfolder (e.g., menus/main.yml)
-        // Return folder path with dots (e.g., "menus.main")
         return relativePath.replace(File.separatorChar, '.');
     }
 
@@ -189,6 +184,10 @@ public class LangManager {
             Object value = section.get(key);
             if (value instanceof ConfigurationSection) {
                 flattenSectionUnderscore((ConfigurationSection) value, prefix + key + "_", map);
+            } else if (value instanceof List) {
+                List<?> list = (List<?>) value;
+                String joined = String.join("\n", list.stream().map(Object::toString).toArray(String[]::new));
+                map.put((prefix + key).toLowerCase(), joined);
             } else if (value != null) {
                 map.put((prefix + key).toLowerCase(), value.toString());
             }
@@ -251,30 +250,28 @@ public class LangManager {
         UUID uuid = player.getUniqueId();
         String lang = playerLang.getOrDefault(uuid, defaultLang);
 
-        // Get raw translation from cache or load it
-        String rawTranslation = getRawTranslation(lang, key);
+        // Get cached translation object (pre-calculated attributes)
+        CachedTranslation cached = getCachedTranslation(lang, key);
 
-        if (rawTranslation == null) {
+        if (cached == null) {
             return MessageUtil.getMessage(plugin.getMessagesConfig(), "translation_not_found", "{key}", key);
         }
 
-        // Apply color codes
-        rawTranslation = MessageUtil.colorize(rawTranslation);
-
-        // Fast path: If no placeholders, return immediately
-        if (!containsPlaceholders(rawTranslation)) {
-            return rawTranslation;
+        // Fast path: If no placeholders, return pre-colorized content immediately
+        // Zero allocations for static messages
+        if (!cached.hasPlaceholders) {
+            return cached.content;
         }
 
-        // Check parsed message cache
-        String parsedCacheKey = uuid + ":" + lang + ":" + key.toLowerCase() + ":" + rawTranslation.hashCode();
+        // Check parsed message cache for dynamic content
+        String parsedCacheKey = uuid + ":" + lang + ":" + key.toLowerCase() + ":" + cached.hashCode();
         String cachedParsed = parsedMessageCache.getIfPresent(parsedCacheKey);
         if (cachedParsed != null) {
             return cachedParsed;
         }
 
         // Fast-path: Handle internal %lang_*% placeholders first
-        String result = parseInternalPlaceholders(player, rawTranslation);
+        String result = parseInternalPlaceholders(player, cached.content);
 
         // Only use PlaceholderAPI if other placeholders remain
         if (containsPlaceholders(result)) {
@@ -287,11 +284,9 @@ public class LangManager {
     }
 
     public String getLangTranslation(String lang, String key) {
-        String cacheKey = lang + ":" + key.toLowerCase();
-
-        String cached = translationCache.getIfPresent(cacheKey);
+        CachedTranslation cached = getCachedTranslation(lang, key);
         if (cached != null) {
-            return MessageUtil.colorize(cached);
+            return cached.content;
         }
 
         Map<String, String> langMap = translations.getOrDefault(lang, Collections.emptyMap());
@@ -299,10 +294,8 @@ public class LangManager {
         String translation = langMap.getOrDefault(key.toLowerCase(), defaultMap.get(key.toLowerCase()));
 
         if (translation == null) {
-            translation = MessageUtil.getMessage(plugin.getMessagesConfig(), "translation_not_found", "{key}", key);
+            return MessageUtil.getMessage(plugin.getMessagesConfig(), "translation_not_found", "{key}", key);
         }
-
-        translationCache.put(cacheKey, translation);
 
         return MessageUtil.colorize(translation);
     }
@@ -326,12 +319,12 @@ public class LangManager {
     }
 
     /**
-     * Helper method to get raw translation from cache or translations map
+     * Helper method to get cached translation object
      */
-    private String getRawTranslation(String lang, String key) {
+    private CachedTranslation getCachedTranslation(String lang, String key) {
         String cacheKey = lang + ":" + key.toLowerCase();
 
-        String cached = translationCache.getIfPresent(cacheKey);
+        CachedTranslation cached = translationCache.getIfPresent(cacheKey);
         if (cached != null) {
             return cached;
         }
@@ -341,10 +334,39 @@ public class LangManager {
         String translation = langMap.getOrDefault(key.toLowerCase(), defaultMap.get(key.toLowerCase()));
 
         if (translation != null) {
-            translationCache.put(cacheKey, translation);
+            String colorized = MessageUtil.colorize(translation);
+            boolean hasPlaceholders = containsPlaceholders(colorized);
+            cached = new CachedTranslation(colorized, hasPlaceholders);
+            translationCache.put(cacheKey, cached);
         }
 
-        return translation;
+        return cached;
+    }
+
+    /**
+     * Helper method to get raw translation from cache or translations map
+     * 
+     * @deprecated Use getCachedTranslation instead
+     */
+    private String getRawTranslation(String lang, String key) {
+        CachedTranslation cached = getCachedTranslation(lang, key);
+        return cached != null ? cached.content : null;
+    }
+
+    // Immutable value object for caching
+    private static class CachedTranslation {
+        public final String content;
+        public final boolean hasPlaceholders;
+
+        public CachedTranslation(String content, boolean hasPlaceholders) {
+            this.content = content;
+            this.hasPlaceholders = hasPlaceholders;
+        }
+
+        @Override
+        public int hashCode() {
+            return content.hashCode();
+        }
     }
 
     /**
@@ -365,8 +387,8 @@ public class LangManager {
             String key = matcher.group(1);
             String translation = getRawTranslation(getPlayerLang(player.getUniqueId()), key);
             if (translation != null) {
-                // Apply color codes and escape special regex characters
-                translation = MessageUtil.colorize(translation).replace("$", "\\$");
+                // escape special regex characters
+                translation = translation.replace("$", "\\$");
             } else {
                 translation = "Translation not found: " + key;
             }
