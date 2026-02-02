@@ -9,7 +9,8 @@ import java.util.Map;
 
 /**
  * Public API for interacting with the IGLanguages plugin.
- * Allows getting and setting player languages, fetching translations, and listing available languages.
+ * Allows getting and setting player languages, fetching translations, and
+ * listing available languages.
  */
 public class IGLanguagesAPI {
     private static IGLanguagesAPI instance;
@@ -17,6 +18,7 @@ public class IGLanguagesAPI {
 
     /**
      * Constructs the API instance. Usually called internally by the plugin.
+     * 
      * @param langManager The language manager used by the plugin.
      */
     public IGLanguagesAPI(LangManager langManager) {
@@ -26,6 +28,7 @@ public class IGLanguagesAPI {
 
     /**
      * Gets the singleton instance of the API.
+     * 
      * @return The IGLanguagesAPI instance.
      */
     public static IGLanguagesAPI get() {
@@ -34,6 +37,7 @@ public class IGLanguagesAPI {
 
     /**
      * Returns the current language code of a player.
+     * 
      * @param player The target player.
      * @return The language code (e.g., "en_us").
      */
@@ -43,8 +47,9 @@ public class IGLanguagesAPI {
 
     /**
      * Sets the language for a player and saves it.
+     * 
      * @param player The target player.
-     * @param lang The language code to set (e.g., "pt_br").
+     * @param lang   The language code to set (e.g., "pt_br").
      */
     public void setPlayerLang(Player player, String lang) {
         langManager.setPlayerLang(player.getUniqueId(), lang);
@@ -53,8 +58,9 @@ public class IGLanguagesAPI {
 
     /**
      * Gets a translation for a specific key in a given language.
+     * 
      * @param lang The language code.
-     * @param key The translation key.
+     * @param key  The translation key.
      * @return The translated text or an error message.
      */
     public String getLangTranslation(String lang, String key) {
@@ -63,8 +69,9 @@ public class IGLanguagesAPI {
 
     /**
      * Gets a translation for a player, using their current language.
+     * 
      * @param player The target player.
-     * @param key The translation key.
+     * @param key    The translation key.
      * @return The translated text.
      */
     public String getPlayerTranslation(Player player, String key) {
@@ -73,6 +80,7 @@ public class IGLanguagesAPI {
 
     /**
      * Lists all available language codes.
+     * 
      * @return A list of language codes.
      */
     public List<String> getAvailableLangs() {
@@ -81,6 +89,7 @@ public class IGLanguagesAPI {
 
     /**
      * Checks if a specific language is supported.
+     * 
      * @param lang The language code to check (e.g., "en_us").
      * @return True if the language is supported, false otherwise.
      */
@@ -90,6 +99,7 @@ public class IGLanguagesAPI {
 
     /**
      * Fetches multiple translations for a given language.
+     * 
      * @param lang The language code.
      * @param keys A list of translation keys.
      * @return A map of keys to their translated values.
@@ -104,6 +114,7 @@ public class IGLanguagesAPI {
 
     /**
      * Removes a player's language, resetting it to the default language.
+     * 
      * @param player The target player.
      */
     public void resetPlayerLang(Player player) {
@@ -112,11 +123,51 @@ public class IGLanguagesAPI {
     }
 
     /**
-     * Detect player client language, for get current player language use getPlayerLang() instead.
+     * Detect player client language, for get current player language use
+     * getPlayerLang() instead.
+     * 
      * @param player the target player
      * @return The language code (e.g., "en_us").
      */
     public String detectPlayerLang(Player player) {
         return langManager.detectClientLanguage(player);
+    }
+
+    /**
+     * Reloads the language manager, including config and cached translations.
+     */
+    public void reload() {
+        langManager.reload();
+    }
+
+    /**
+     * Gets the default language code configured in config.yml.
+     * 
+     * @return The default language code.
+     */
+    public String getDefaultLang() {
+        return langManager.getDefaultLang();
+    }
+
+    /**
+     * Checks if a specific language is supported.
+     * Alias for isLanguageSupported.
+     * 
+     * @param lang The language code to check.
+     * @return True if supported, false otherwise.
+     */
+    public boolean hasLanguage(String lang) {
+        return isLanguageSupported(lang);
+    }
+
+    /**
+     * Gets a player's UUID from their name using the internal case-insensitive
+     * cache.
+     * 
+     * @param name The player's name.
+     * @return The UUID or null if not found/cached.
+     */
+    public java.util.UUID getUUIDByName(String name) {
+        return langManager.getUUIDByName(name);
     }
 }

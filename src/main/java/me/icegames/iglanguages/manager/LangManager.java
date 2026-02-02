@@ -164,6 +164,13 @@ public class LangManager {
         }
     }
 
+    public void reload() {
+        plugin.reloadConfig();
+        loadAll();
+        clearCache();
+        plugin.getLogger().info("Reloaded language manager.");
+    }
+
     private String getFilePrefix(File rootDir, File file) {
         String relativePath = file.getAbsolutePath().substring(rootDir.getAbsolutePath().length() + 1);
         if (relativePath.endsWith(".yml")) {

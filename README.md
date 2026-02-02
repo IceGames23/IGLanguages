@@ -85,32 +85,32 @@ Automatic migration from YAML to database storage is performed on first use.
 replace ``$VERSION`` with current API version.
 
 ### Gradle
-```
+```groovy
 repositories {
-    maven { 
-        url = 'https://repo.rainbowcretion.net' 
-    }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-    compile 'me.icegames:IGLanguages:$VERSION$'
+    // replace $VERSION with the latest release
+    implementation 'com.github.IceGames23:IGLanguages:$VERSION'
 }
 ```
+
 ### Maven
-```
+```xml
 <repositories>
     <repository>
-        <id>rainbowcreation</id>
-        <url>https://repo.rainbowcreation.net</url>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
     </repository>
 </repositories>
 
 <dependencies>
     <dependency>
-        <groupId>me.icegames</groupId>
+        <groupId>com.github.IceGames23</groupId>
         <artifactId>IGLanguages</artifactId>
-        <version>$VERSION$</version>
-    <scope>provided</scope>
+        <version>$VERSION</version>
+        <scope>provided</scope>
     </dependency>
 </dependencies>
 ```
@@ -134,56 +134,14 @@ private IGLanguageAPI langAPI;
 
         // When you want to access the API, check if the instance is null
         if (this.langAPI != null) {
-            // Do stuff with the API here
+            String message = langAPI.getPlayerTranslation(player, "messages.welcome");
+            player.sendMessage(message);
         }
     }
 }
 
 ### Depend/Softdepend
 You will need to add ``softdepend: [IGLanguages]``or ``depend: [IGLanguages]`` to your plugin.yml depending on if your plugin requires IGLanguages to be installed or not.
-
----
-
-## Crowdin Integration (BETA - Currently Disabled)
-
-> ⚠️ **BETA**: Crowdin integration is disabled in version 2.1.0. This feature is under development.
-
-This project uses **Crowdin** for professional translation management. Translators can contribute without needing GitHub access or technical knowledge.
-
-### For Translators
-
-1. Visit the Crowdin project page (link provided by project maintainer)
-2. Select your language
-3. Translate strings directly in the web interface
-4. Your translations will be automatically integrated via pull requests
-
-### For Developers/Maintainers
-
-#### Initial Setup
-
-1. **Create a Crowdin project** at [crowdin.com](https://crowdin.com)
-2. **Get your credentials**:
-   - Project ID: Found in project settings
-   - Personal Access Token: Generated in Account Settings → API
-3. **Add GitHub Secrets**:
-   - Go to repository Settings → Secrets and variables → Actions
-   - Add `CROWDIN_PROJECT_ID`
-   - Add `CROWDIN_PERSONAL_TOKEN`
-
-#### Workflow
-
-- **Upload Sources**: When Portuguese (BR) files (`src/main/resources/langs/pt_br/`) are modified and pushed to `main`, they're automatically uploaded to Crowdin
-- **Download Translations**: Daily at 2 AM UTC, completed translations are pulled from Crowdin and submitted as a Pull Request
-- **Manual Trigger**: Both workflows can be manually triggered from the "Actions" tab
-
-#### File Structure
-
-Portuguese (BR) source files in `src/main/resources/langs/pt_br/` are mapped to other languages using the pattern:
-```
-src/main/resources/langs/{language_code}/{original_file_name}
-```
-
-For example: `pt_br/messages.yml` → `en_us/messages.yml`, `es_es/messages.yml`, etc.
 
 ---
 
