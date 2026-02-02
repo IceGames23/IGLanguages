@@ -118,6 +118,7 @@ dependencies {
 ### Getting an API instance
 In order to use the API, you must first acquire an API instance. An example plugin class that does this can be found below.
 
+```
 import me.icegames.iglanguages.IGLanguages;
 import me.icegames.iglanguages.api.IGLanguagesAPI;
 import org.bukkit.Bukkit;
@@ -139,6 +140,7 @@ private IGLanguageAPI langAPI;
         }
     }
 }
+```
 
 ### Depend/Softdepend
 You will need to add ``softdepend: [IGLanguages]``or ``depend: [IGLanguages]`` to your plugin.yml depending on if your plugin requires IGLanguages to be installed or not.
