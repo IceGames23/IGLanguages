@@ -8,7 +8,18 @@ import java.util.regex.Pattern;
 
 public class MessageUtil {
 
-    private static final Pattern HEX_PATTERN = Pattern.compile("&\\{#([A-Fa-f0-9]{6})\\}");
+    /**
+     * Supported Hexadecimal Patterns.
+     * Used to identify and translate colours in chat.
+     * * Examples:
+     * - &{#FFFFFF}
+     * - <#FFFFFF>
+     * - {#FFFFFF}
+     * - &#FFFFFF
+     * - #FFFFFF
+    */
+
+    private static final Pattern HEX_PATTERN = Pattern.compile("(?:&\{#|<#|\{#|&#|#)([A-Fa-f0-9]{6})(?:\}|>|)");
 
     public static String getMessage(FileConfiguration messageConfig, String path, String... placeholders) {
         Object messageObj = messageConfig.get(path);
