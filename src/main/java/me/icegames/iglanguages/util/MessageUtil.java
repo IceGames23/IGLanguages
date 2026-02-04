@@ -17,9 +17,9 @@ public class MessageUtil {
      * - {#FFFFFF}
      * - &#FFFFFF
      * - #FFFFFF
-    */
+     */
 
-    private static final Pattern HEX_PATTERN = Pattern.compile("(?:&\{#|<#|\{#|&#|#)([A-Fa-f0-9]{6})(?:\}|>|)");
+    private static final Pattern HEX_PATTERN = Pattern.compile("(?:&\\{#|<#|\\{#|&#|#)([A-Fa-f0-9]{6})(?:\\}|>|)");
 
     public static String getMessage(FileConfiguration messageConfig, String path, String... placeholders) {
         Object messageObj = messageConfig.get(path);
