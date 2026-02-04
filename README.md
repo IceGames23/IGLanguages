@@ -40,7 +40,11 @@ A powerful and flexible language management plugin for Minecraft servers, suppor
 
 ## Formatting
 - **Standard Colors**: `&a`, `&l`, etc.
-- **Hex Colors**: `&{#RRGGBB}` (e.g., `&{#FF0000}Red`).
+- **Hex Colors**: 
+    - `&{#RRGGBB}` (e.g., `&{#FF0000}Red`).
+    - `<#RRGGBB>` (e.g., `<#FF0000>Red`).
+    - `&#RRGGBB` (e.g., `&#FF0000}Red`).
+    - `#RRGGBB` (e.g., `#FF0000Red`).
 - **MiniMessage**: Supported if the server has the libraries (e.g. Paper 1.16+).
   - Example: `<rainbow>Rainbow Text</rainbow>`, `<gradient:red:blue>Gradient</gradient>`.
   - [MiniMessage Documentation](https://docs.papermc.io/adventure/minimessage/format)
