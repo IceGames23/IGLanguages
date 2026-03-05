@@ -33,6 +33,89 @@ public class LangManager {
     // Patterns for placeholder detection and parsing
     private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("%[^%]+%");
     private static final Pattern LANG_PLACEHOLDER_PATTERN = Pattern.compile("%lang_([^%]+)%");
+    private static final Pattern ARG_PATTERN = Pattern.compile("\\{(\\d+)}");
+
+    /**
+     * Simple holder for a parsed key and its arguments.
+     */
+    private static class ParsedKey {
+        public final String key;
+        public final String[] args;
+
+        public ParsedKey(String key, String[] args) {
+            this.key = key;
+            this.args = args;
+        }
+    }
+
+    /**
+     * Parses "key:arg0,arg1,..." into a ParsedKey.
+     * Splits on the first ':' only. Args are split on unescaped ','.
+     * Use '\,' for literal commas in arguments.
+     */
+    static ParsedKey parseKeyWithArgs(String input) {
+        int colonIdx = input.indexOf(':');
+        if (colonIdx == -1) {
+            return new ParsedKey(input, new String[0]);
+        }
+        String key = input.substring(0, colonIdx);
+        String argsStr = input.substring(colonIdx + 1);
+
+        List<String> args = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        for (int i = 0; i < argsStr.length(); i++) {
+            char c = argsStr.charAt(i);
+            if (c == '\\' && i + 1 < argsStr.length() && argsStr.charAt(i + 1) == ',') {
+                current.append(',');
+                i++; // skip escaped comma
+            } else if (c == ',') {
+                args.add(current.toString());
+                current.setLength(0);
+            } else {
+                current.append(c);
+            }
+        }
+        args.add(current.toString());
+        return new ParsedKey(key, args.toArray(new String[0]));
+    }
+
+    /**
+     * Replaces {0}, {1}, etc. in the template with the corresponding args.
+     * Out-of-range indices are left as-is.
+     */
+    static String applyArgs(String template, String[] args) {
+        if (args.length == 0) return template;
+        Matcher m = ARG_PATTERN.matcher(template);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            int idx = Integer.parseInt(m.group(1));
+            if (idx < args.length) {
+                m.appendReplacement(sb, Matcher.quoteReplacement(args[idx]));
+            }
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+    /**
+     * Resolves bracket PAPI placeholders ({server_online}, etc.) in args.
+     * Only called when player is non-null and PlaceholderAPI is available.
+     */
+    private String[] resolveArgs(Player player, String[] args) {
+        if (args.length == 0 || player == null) return args;
+        boolean hasPapi = org.bukkit.Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null;
+        if (!hasPapi) return args;
+
+        String[] resolved = new String[args.length];
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].contains("{")) {
+                resolved[i] = PlaceholderAPI.setBracketPlaceholders(player, args[i]);
+            } else {
+                resolved[i] = args[i];
+            }
+        }
+        return resolved;
+    }
 
     public LangManager(IGLanguages plugin, PlayerLangStorage storage) {
         this.plugin = plugin;
@@ -253,58 +336,77 @@ public class LangManager {
         return total;
     }
 
-    public String getTranslation(Player player, String key) {
+    public String getTranslation(Player player, String keyWithArgs) {
         UUID uuid = player.getUniqueId();
         String lang = playerLang.getOrDefault(uuid, defaultLang);
 
+        // Parse key and optional arguments (e.g. "key:arg0,arg1")
+        ParsedKey parsed = parseKeyWithArgs(keyWithArgs);
+        boolean hasArgs = parsed.args.length > 0;
+
+        // Resolve bracket PAPI placeholders in args (e.g. {server_online})
+        String[] resolvedArgs = hasArgs ? resolveArgs(player, parsed.args) : parsed.args;
+
         // Get cached translation object (pre-calculated attributes)
-        CachedTranslation cached = getCachedTranslation(lang, key);
+        CachedTranslation cached = getCachedTranslation(lang, parsed.key);
 
         if (cached == null) {
-            return MessageUtil.getMessage(plugin.getMessagesConfig(), "translation_not_found", "{key}", key);
+            return MessageUtil.getMessage(plugin.getMessagesConfig(), "translation_not_found", "{key}", parsed.key);
         }
 
-        // Fast path: If no placeholders, return pre-colorized content immediately
-        // Zero allocations for static messages
-        if (!cached.hasPlaceholders) {
+        // Fast path: If no placeholders and no args, return pre-colorized content immediately
+        if (!cached.hasPlaceholders && !hasArgs) {
             return cached.content;
         }
 
-        // Check parsed message cache for dynamic content
-        String parsedCacheKey = uuid + ":" + lang + ":" + key.toLowerCase() + ":" + cached.hashCode();
-        String cachedParsed = parsedMessageCache.getIfPresent(parsedCacheKey);
-        if (cachedParsed != null) {
-            return cachedParsed;
+        // Apply args to template before caching check (args are dynamic)
+        String content = hasArgs ? applyArgs(cached.content, resolvedArgs) : cached.content;
+
+        // When args are present, skip parsedMessageCache (args are dynamic per-invocation)
+        if (!hasArgs) {
+            String parsedCacheKey = uuid + ":" + lang + ":" + parsed.key.toLowerCase() + ":" + cached.hashCode();
+            String cachedParsed = parsedMessageCache.getIfPresent(parsedCacheKey);
+            if (cachedParsed != null) {
+                return cachedParsed;
+            }
+
+            // Handle internal %lang_*% placeholders
+            String result = parseInternalPlaceholders(player, content);
+
+            // Only use PlaceholderAPI if other placeholders remain
+            if (containsPlaceholders(result)) {
+                result = PlaceholderAPI.setPlaceholders(player, result);
+            }
+
+            parsedMessageCache.put(parsedCacheKey, result);
+            return result;
         }
 
-        // Fast-path: Handle internal %lang_*% placeholders first
-        String result = parseInternalPlaceholders(player, cached.content);
-
-        // Only use PlaceholderAPI if other placeholders remain
+        // Args present: resolve placeholders but don't cache
+        String result = parseInternalPlaceholders(player, content);
         if (containsPlaceholders(result)) {
             result = PlaceholderAPI.setPlaceholders(player, result);
         }
-
-        // Cache the parsed result
-        parsedMessageCache.put(parsedCacheKey, result);
         return result;
     }
 
-    public String getLangTranslation(String lang, String key) {
-        CachedTranslation cached = getCachedTranslation(lang, key);
+    public String getLangTranslation(String lang, String keyWithArgs) {
+        ParsedKey parsed = parseKeyWithArgs(keyWithArgs);
+
+        CachedTranslation cached = getCachedTranslation(lang, parsed.key);
         if (cached != null) {
-            return cached.content;
+            return applyArgs(cached.content, parsed.args);
         }
 
         Map<String, String> langMap = translations.getOrDefault(lang, Collections.emptyMap());
         Map<String, String> defaultMap = translations.getOrDefault(defaultLang, Collections.emptyMap());
-        String translation = langMap.getOrDefault(key.toLowerCase(), defaultMap.get(key.toLowerCase()));
+        String translation = langMap.getOrDefault(parsed.key.toLowerCase(), defaultMap.get(parsed.key.toLowerCase()));
 
         if (translation == null) {
-            return MessageUtil.getMessage(plugin.getMessagesConfig(), "translation_not_found", "{key}", key);
+            return MessageUtil.getMessage(plugin.getMessagesConfig(), "translation_not_found", "{key}", parsed.key);
         }
 
-        return MessageUtil.colorize(translation);
+        return applyArgs(MessageUtil.colorize(translation), parsed.args);
     }
 
     public String detectClientLanguage(Player player) {
@@ -391,15 +493,17 @@ public class LangManager {
         StringBuffer result = new StringBuffer();
 
         while (matcher.find()) {
-            String key = matcher.group(1);
-            String translation = getRawTranslation(getPlayerLang(player.getUniqueId()), key);
+            String captured = matcher.group(1);
+            ParsedKey parsed = parseKeyWithArgs(captured);
+            String[] innerArgs = parsed.args.length > 0 ? resolveArgs(player, parsed.args) : parsed.args;
+
+            String translation = getRawTranslation(getPlayerLang(player.getUniqueId()), parsed.key);
             if (translation != null) {
-                // escape special regex characters
-                translation = translation.replace("$", "\\$");
+                translation = applyArgs(translation, innerArgs);
             } else {
-                translation = "Translation not found: " + key;
+                translation = "Translation not found: " + parsed.key;
             }
-            matcher.appendReplacement(result, translation);
+            matcher.appendReplacement(result, Matcher.quoteReplacement(translation));
         }
         matcher.appendTail(result);
         return result.toString();

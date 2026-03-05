@@ -79,8 +79,47 @@ public class IGLanguagesAPI {
     }
 
     /**
+     * Gets a translation for a specific key in a given language, with parameterized arguments.
+     * Arguments replace {0}, {1}, etc. in the translation template.
+     *
+     * @param lang The language code.
+     * @param key  The translation key.
+     * @param args The arguments to substitute into the template.
+     * @return The translated text with arguments applied.
+     */
+    public String getLangTranslation(String lang, String key, String... args) {
+        return langManager.getLangTranslation(lang, buildKeyWithArgs(key, args));
+    }
+
+    /**
+     * Gets a translation for a player with parameterized arguments.
+     * Arguments replace {0}, {1}, etc. in the translation template.
+     *
+     * @param player The target player.
+     * @param key    The translation key.
+     * @param args   The arguments to substitute into the template.
+     * @return The translated text with arguments applied.
+     */
+    public String getPlayerTranslation(Player player, String key, String... args) {
+        return langManager.getTranslation(player, buildKeyWithArgs(key, args));
+    }
+
+    /**
+     * Builds a "key:arg0,arg1,..." string, escaping commas in arg values.
+     */
+    private static String buildKeyWithArgs(String key, String[] args) {
+        if (args == null || args.length == 0) return key;
+        StringBuilder sb = new StringBuilder(key).append(':');
+        for (int i = 0; i < args.length; i++) {
+            if (i > 0) sb.append(',');
+            sb.append(args[i].replace(",", "\\,"));
+        }
+        return sb.toString();
+    }
+
+    /**
      * Lists all available language codes.
-     * 
+     *
      * @return A list of language codes.
      */
     public List<String> getAvailableLangs() {
