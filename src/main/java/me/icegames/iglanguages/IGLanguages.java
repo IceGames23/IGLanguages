@@ -131,6 +131,11 @@ public class IGLanguages extends JavaPlugin {
             getLogger().warning(
                     "If you want to use auto-translate placeholder please install PlaceholderAPI to your plugins/ folder");
         }
+
+        if (Bukkit.getPluginManager().getPlugin("ProtocolLib") != null) {
+            new me.icegames.iglanguages.packet.ProtocolLibHook(this).register();
+            getLogger().info("Registered ProtocolLib hook for packet interception.");
+        }
     }
 
     private void initUpdateChecker() {
