@@ -9,6 +9,7 @@ import me.icegames.iglanguages.listener.PlayerQuitListener;
 import me.icegames.iglanguages.manager.ActionsManager;
 import me.icegames.iglanguages.manager.LangManager;
 import me.icegames.iglanguages.manager.RedisManager;
+import me.icegames.iglanguages.packet.ProtocolLibHook;
 import me.icegames.iglanguages.util.ConfigUpdateHelper;
 import me.icegames.iglanguages.placeholder.LangExpansion;
 import me.icegames.iglanguages.storage.PlayerLangStorage;
@@ -41,6 +42,7 @@ public class IGLanguages extends JavaPlugin {
     private String consolePrefix;
 
     private RedisManager redisManager;
+    private ProtocolLibHook protocolLibHook;
 
     private void startingBanner() {
         Bukkit.getConsoleSender().sendMessage("§b  ___ §b____   ");
@@ -81,6 +83,9 @@ public class IGLanguages extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (protocolLibHook != null) {
+            protocolLibHook.unregister();
+        }
         if (storage != null) {
             storage.close();
         }
@@ -132,8 +137,10 @@ public class IGLanguages extends JavaPlugin {
                     "If you want to use auto-translate placeholder please install PlaceholderAPI to your plugins/ folder");
         }
 
-        if (Bukkit.getPluginManager().getPlugin("ProtocolLib") != null) {
-            new me.icegames.iglanguages.packet.ProtocolLibHook(this).register();
+        if (getConfig().getBoolean("protocollib.enabled", true)
+                && Bukkit.getPluginManager().getPlugin("ProtocolLib") != null) {
+            this.protocolLibHook = new ProtocolLibHook(this);
+            protocolLibHook.register();
             getLogger().info("Registered ProtocolLib hook for packet interception.");
         }
     }
@@ -176,6 +183,10 @@ public class IGLanguages extends JavaPlugin {
 
     public LangManager getLangManager() {
         return langManager;
+    }
+
+    public ProtocolLibHook getProtocolLibHook() {
+        return protocolLibHook;
     }
 
     public void LogDebug(String message) {

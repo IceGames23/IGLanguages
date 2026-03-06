@@ -47,6 +47,14 @@ performance:
   # This is the L1 cache for translation lookups
   translationCacheSize: 500
 
+# ProtocolLib packet interception
+# Translates %lang_*% placeholders in outgoing packets (chat, titles, scoreboard, etc.)
+# Requires ProtocolLib to be installed
+protocollib:
+  enabled: false
+  # Cache size for processed packet translations
+  cacheSize: 200
+
 # Don't change this if you don't know what it is
 languageDetectionDelay: 100
 

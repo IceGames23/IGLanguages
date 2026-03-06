@@ -25,7 +25,7 @@ public class LangManager {
     private final PlayerLangStorage playerLangStorage;
     public final Map<UUID, String> playerLang = new ConcurrentHashMap<>();
     private final Map<String, UUID> playerNameToUUID = new ConcurrentHashMap<>();
-    private final Map<String, Map<String, String>> translations = new HashMap<>();
+    private volatile Map<String, Map<String, String>> translations = new HashMap<>();
     private final Cache<String, CachedTranslation> translationCache;
     private final Cache<String, String> parsedMessageCache;
     private final String defaultLang;
@@ -196,11 +196,11 @@ public class LangManager {
     }
 
     public void loadAll() {
-        translations.clear();
         File langsFolder = new File(plugin.getDataFolder(), "langs");
         if (!langsFolder.exists())
             langsFolder.mkdirs();
 
+        Map<String, Map<String, String>> newTranslations = new HashMap<>();
         File[] langDirs = langsFolder.listFiles(File::isDirectory);
         if (langDirs != null) {
             for (File langDir : langDirs) {
@@ -213,9 +213,10 @@ public class LangManager {
                 }
                 Map<String, String> langMap = new HashMap<>();
                 loadLangFilesRecursively(langDir, langDir, langMap);
-                translations.put(lang, langMap);
+                newTranslations.put(lang, langMap);
             }
         }
+        this.translations = newTranslations;
     }
 
     private void loadLangFilesRecursively(File rootDir, File currentDir, Map<String, String> langMap) {
@@ -321,16 +322,16 @@ public class LangManager {
     }
 
     public Map<String, Map<String, String>> getTranslations() {
-        return translations;
+        return this.translations;
     }
 
     public List<String> getAvailableLangs() {
-        return new ArrayList<>(translations.keySet());
+        return new ArrayList<>(this.translations.keySet());
     }
 
     public int getTotalTranslationsCount() {
         int total = 0;
-        for (Map<String, String> langMap : translations.values()) {
+        for (Map<String, String> langMap : this.translations.values()) {
             total += langMap.size();
         }
         return total;
@@ -390,6 +391,18 @@ public class LangManager {
         return result;
     }
 
+    /**
+     * Thread-safe translation lookup without PlaceholderAPI resolution.
+     * Returns null if the key doesn't exist.
+     * Used by ProtocolLibHook which runs on Netty IO threads.
+     */
+    public String getSimpleTranslation(String lang, String keyWithArgs) {
+        ParsedKey parsed = parseKeyWithArgs(keyWithArgs);
+        CachedTranslation cached = getCachedTranslation(lang, parsed.key);
+        if (cached == null) return null;
+        return applyArgs(cached.content, parsed.args);
+    }
+
     public String getLangTranslation(String lang, String keyWithArgs) {
         ParsedKey parsed = parseKeyWithArgs(keyWithArgs);
 
@@ -398,8 +411,9 @@ public class LangManager {
             return applyArgs(cached.content, parsed.args);
         }
 
-        Map<String, String> langMap = translations.getOrDefault(lang, Collections.emptyMap());
-        Map<String, String> defaultMap = translations.getOrDefault(defaultLang, Collections.emptyMap());
+        Map<String, Map<String, String>> snapshot = this.translations;
+        Map<String, String> langMap = snapshot.getOrDefault(lang, Collections.emptyMap());
+        Map<String, String> defaultMap = snapshot.getOrDefault(defaultLang, Collections.emptyMap());
         String translation = langMap.getOrDefault(parsed.key.toLowerCase(), defaultMap.get(parsed.key.toLowerCase()));
 
         if (translation == null) {
@@ -438,8 +452,9 @@ public class LangManager {
             return cached;
         }
 
-        Map<String, String> langMap = translations.getOrDefault(lang, Collections.emptyMap());
-        Map<String, String> defaultMap = translations.getOrDefault(defaultLang, Collections.emptyMap());
+        Map<String, Map<String, String>> snapshot = this.translations;
+        Map<String, String> langMap = snapshot.getOrDefault(lang, Collections.emptyMap());
+        Map<String, String> defaultMap = snapshot.getOrDefault(defaultLang, Collections.emptyMap());
         String translation = langMap.getOrDefault(key.toLowerCase(), defaultMap.get(key.toLowerCase()));
 
         if (translation != null) {

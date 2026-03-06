@@ -58,6 +58,9 @@ public class LangCommand implements CommandExecutor {
             plugin.reloadConfig();
             langManager.loadAll();
             langManager.clearCache();
+            if (plugin.getProtocolLibHook() != null) {
+                plugin.getProtocolLibHook().clearCache();
+            }
             String consolePrefix = "\u001B[1;30m[\u001B[0m\u001B[36mI\u001B[1;36mG\u001B[0m\u001B[1;37m" + "Languages" + "\u001B[1;30m]\u001B[0m ";
             System.out.println(consolePrefix + "Reloaded " + langManager.getAvailableLangs().size() + " languages! " + langManager.getAvailableLangs());
             System.out.println(consolePrefix + "Reloaded " + langManager.getTotalTranslationsCount() + " total translations!");
