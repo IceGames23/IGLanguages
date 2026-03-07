@@ -100,8 +100,10 @@ public class IGLanguages extends JavaPlugin {
         saveDefaultMessagesConfig();
         saveDefaultExamples();
 
-        // Update configs automatically
-        ConfigUpdateHelper.updateConfigs(this, "config.yml", "messages.yml");
+        // Update configs automatically (preserve user-customized action sections)
+        ConfigUpdateHelper.updateConfig(this, "config.yml",
+                java.util.Collections.singletonList("actionsOnSet"));
+        ConfigUpdateHelper.updateConfig(this, "messages.yml");
     }
 
     private void initManagers() {

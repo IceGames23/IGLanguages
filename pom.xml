@@ -6,7 +6,7 @@
 
   <groupId>me.icegames</groupId>
   <artifactId>IGLanguages</artifactId>
-  <version>2.5.0-BETA</version>
+  <version>2.5.1-BETA</version>
   <packaging>jar</packaging>
 
   <name>IGLanguages</name>
